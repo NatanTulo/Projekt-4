@@ -7,9 +7,18 @@ using namespace Gdiplus;
 
 void OnPaint(HDC hdc)
 {
+    HWND hwnd = GetActiveWindow();
+    int width;
+    int height;
+    RECT rect;
+    if (GetWindowRect(hwnd, &rect))
+    {
+        width = rect.right - rect.left;
+        height = rect.bottom - rect.top;       
+    }
 	Graphics graphics(hdc);
 	Pen pen(Color(255,0,0,255));
-	graphics.DrawLine(&pen,0,0,200,100);
+	graphics.DrawLine(&pen,0,0,width,height);    
 }
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -33,13 +42,13 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
    wndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
    wndClass.hbrBackground  = (HBRUSH)GetStockObject(WHITE_BRUSH);
    wndClass.lpszMenuName   = NULL;
-   wndClass.lpszClassName  = TEXT("GettingStarted");
+   wndClass.lpszClassName  = TEXT("Winda");
    
    RegisterClass(&wndClass);
    
    hWnd = CreateWindow(
-      TEXT("GettingStarted"),   // window class name
-      TEXT("Getting Started"),  // window caption
+      TEXT("Winda"),   // window class name
+      TEXT("Winda"),  // window caption
       WS_OVERLAPPEDWINDOW,      // window style
       CW_USEDEFAULT,            // initial x position
       CW_USEDEFAULT,            // initial y position
@@ -63,43 +72,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
    return msg.wParam;
 }
 
-/*int main()
-{
-    
-    ULONG_PTR gdiplusToken;
-    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WndProc;
-    wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = L"SampleWindowClass";
 
-    if (!RegisterClass(&wc))
-        return 1;
-
-    HWND hwnd = CreateWindow(
-        wc.lpszClassName,
-        L"GDI+ Window",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 400, 300,
-        NULL, NULL, wc.hInstance, NULL);
-
-    if (!hwnd)
-        return 1;
-
-    ShowWindow(hwnd, SW_SHOW);
-    UpdateWindow(hwnd);
-
-    MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    GdiplusShutdown(gdiplusToken);
-    return static_cast<int>(msg.wParam);
-*/
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, 
    WPARAM wParam, LPARAM lParam)
