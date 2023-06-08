@@ -2,10 +2,29 @@
 #include <gdiplus.h>
 #include <iostream>
 #include <objidl.h>
+#include <string>
+#include <map>
+
+const int a = 255;
+const int r = 0;
+const int g = 20;
+const int b = 255;
+const int win_width =300; // szerokość i wysokość windy
+const int win_height = 410;
+const int BUTTON_COUNT = 5;
+
+int buttons[BUTTON_COUNT][4] ={ //x,y,width,heigth
+    {},
+    {},
+    {},
+    {},
+    {},
+};
+
 
 using namespace Gdiplus;
 
-void OnPaint(HDC hdc)
+void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
 {
     HWND hwnd = GetActiveWindow();
     int width;
@@ -17,8 +36,55 @@ void OnPaint(HDC hdc)
         height = rect.bottom - rect.top;       
     }
 	Graphics graphics(hdc);
-	Pen pen(Color(255,0,0,255));
-	graphics.DrawLine(&pen,0,0,width,height);    
+	Pen pen(Color(a,r,g,b));
+    
+	graphics.DrawRectangle(&pen,Rx,Ry,w,h);    
+}
+void clearrect(HDC hdc,int Rx, int Ry,int w, int h)
+{
+    HWND hwnd = GetActiveWindow(); // hwnd to inaczej "handle window", czyli jakby wzięcie okienka do obróbki
+    int width;
+    int height;
+    RECT rect; //weź prostokąt okienka
+    if (GetWindowRect(hwnd, &rect))
+    {
+        width = rect.right - rect.left; // i weź z niego roździelczość
+        height = rect.bottom - rect.top;       
+    }
+	Graphics graphics(hdc);
+	Pen pen(Color(a,255,255,255));
+    
+	graphics.DrawRectangle(&pen,Rx,Ry,w,h);    
+}
+void drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value)
+{
+    
+    Graphics    graphics(hdc);
+    SolidBrush  brush(Color(a,r,g,b));
+    FontFamily  fontFamily(L"Comic Sans MS");
+    Font        font(&fontFamily, font_value, FontStyleRegular, UnitPixel);
+    PointF      pointF(x,y);
+    Pen         pen(Color(a,r,g,b));
+    size_t length = wcslen(text);
+    graphics.DrawString(text, length, &font, pointF, &brush);
+    graphics.DrawRectangle(&pen,x,y,font_value*length,font_value*1.5);  
+    int i;
+    do
+    {
+     if(buttons[i][0]==0) 
+     {
+        buttons[i][0] = x;
+        buttons[i][1] = y;
+        buttons[i][2] = font_value*length/2;
+        buttons[i][3] = font_value*1.2;
+        i= 4;
+     }   
+     else
+     i++;
+     
+    } while (i<4);
+    
+    
 }
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -61,6 +127,11 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
       
    ShowWindow(hWnd, iCmdShow);
    UpdateWindow(hWnd);
+    
+    
+    
+
+
    
    while(GetMessage(&msg, NULL, 0, 0))
    {
@@ -71,26 +142,61 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
    GdiplusShutdown(gdiplusToken);
    return msg.wParam;
 }
-
+int check_coords(LPARAM lParam)
+{
+    int x = LOWORD(lParam);
+    int y = HIWORD(lParam);
+    for(int i = 0; i<BUTTON_COUNT; ++i)
+    {
+        if(buttons[i][0]<=x && buttons[i][0]+buttons[i][2]>x)
+        {
+            if(buttons[i][1]<=y && buttons[i][1]+buttons[i][3]>y)
+            return i;
+            else return 0;
+        }
+        else return 0;
+            
+    }
+}
 
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, 
-   WPARAM wParam, LPARAM lParam)
+   WPARAM wParam,LPARAM lParam)
 {
    HDC          hdc;
    PAINTSTRUCT  ps;
+   RECT rect;
+   int w;
+   int h;
+    if (GetWindowRect(hWnd, &rect))
+    {
+       w = rect.right - rect.left;
+       h = rect.bottom - rect.top;       
+    }
+    int buf;
    
    switch(message)
    {
-   case WM_PAINT:
+    case WM_PAINT: // pierwsze pomalowanie (inicjalizujące)
       hdc = BeginPaint(hWnd, &ps);
-      OnPaint(hdc);
+      drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height);
+      drawrectT(hdc,w-w/4,h/4,L"Add Weight",24);
       EndPaint(hWnd, &ps);
       return 0;
-   case WM_DESTROY:
+    case WM_DESTROY: // coś tam do wyłączania programu, po prostu musi być aby komputer nie wybuchnął
       PostQuitMessage(0);
       return 0;
+    case WM_LBUTTONDOWN: // reakcja na wciśnięcie lewego przycisku myszy
+        hdc = GetDC(hWnd);
+        buf = check_coords(lParam); // reakcja guzika, buf jest zmienną która daje ID wciśniętego guzika
+        drawrect(hdc,buttons[buf][0]+10,buttons[buf][1],buttons[buf][2],buttons[buf][3]); // tutaj na przykład wyświetla się prostokąt na koordynatach guzika jako znak, że działa
+        ReleaseDC(hWnd, hdc);
+        return 0;
+    case WM_MOUSEMOVE:
+         // tu można dać coś tak myszka się rusza
+        return 0;
+        
    default:
       return DefWindowProc(hWnd, message, wParam, lParam);
    }
