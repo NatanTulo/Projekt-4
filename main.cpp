@@ -9,9 +9,12 @@ const int a = 255;
 const int r = 0;
 const int g = 20;
 const int b = 255;
-const int win_width =300; // szerokość i wysokość windy
-const int win_height = 410;
+const int win_width =250; // szerokość i wysokość windy
+const int win_height = 350;
 const int BUTTON_COUNT = 5;
+int win_goal = 0;
+int win_state = 0;
+const int VELOCITY = 1;
 
 int buttons[BUTTON_COUNT][4] ={ //x,y,width,heigth
     {},
@@ -68,21 +71,23 @@ void drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value)
     size_t length = wcslen(text);
     graphics.DrawString(text, length, &font, pointF, &brush);
     graphics.DrawRectangle(&pen,x,y,font_value*length,font_value*1.5);  
-    int i;
+    int i = 0;
     do
     {
+        
      if(buttons[i][0]==0) 
      {
         buttons[i][0] = x;
         buttons[i][1] = y;
         buttons[i][2] = font_value*length/2;
         buttons[i][3] = font_value*1.2;
-        i= 4;
+        i= BUTTON_COUNT;
      }   
      else
      i++;
      
-    } while (i<4);
+     
+    } while (i<BUTTON_COUNT);
     
     
 }
@@ -95,6 +100,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
    WNDCLASS            wndClass;
    GdiplusStartupInput gdiplusStartupInput;
    ULONG_PTR           gdiplusToken;
+   HDC                 hdc;
    
    // Initialize GDI+.
    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -115,7 +121,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
    hWnd = CreateWindow(
       TEXT("Winda"),   // window class name
       TEXT("Winda"),  // window caption
-      WS_OVERLAPPEDWINDOW,      // window style
+      WS_OVERLAPPEDWINDOW  & ~WS_SIZEBOX,    // window style
       CW_USEDEFAULT,            // initial x position
       CW_USEDEFAULT,            // initial y position
       CW_USEDEFAULT,            // initial x size
@@ -127,8 +133,32 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
       
    ShowWindow(hWnd, iCmdShow);
    UpdateWindow(hWnd);
+    int width;
+    int height;
     
-    
+    RECT rect;
+    if (GetWindowRect(hWnd, &rect))
+    {
+        width = rect.right - rect.left;
+        height = rect.bottom - rect.top;       
+    }
+    std::cout << win_state<<std::endl;
+    win_goal = height/2;
+    std::cout << win_goal<<std::endl;
+
+    if(win_state<win_goal)
+    {
+        while(win_state<win_goal)
+        {
+            win_state = win_state+VELOCITY;
+            hdc = GetDC(hWnd);
+            clearrect(hdc,width-width/2,win_state+1,win_width,win_height);
+            drawrect(hdc,width-width/2,win_state,win_width,win_height);
+            clearrect(hdc,width-width/2,win_state-1,win_width,win_height);
+            ReleaseDC(hWnd, hdc);
+        }
+        
+    }
     
 
 
@@ -151,12 +181,11 @@ int check_coords(LPARAM lParam)
         if(buttons[i][0]<=x && buttons[i][0]+buttons[i][2]>x)
         {
             if(buttons[i][1]<=y && buttons[i][1]+buttons[i][3]>y)
-            return i;
-            else return 0;
-        }
-        else return 0;
+            return i+1;
             
+        }           
     }
+    return 0;
 }
 
 
@@ -180,8 +209,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
    {
     case WM_PAINT: // pierwsze pomalowanie (inicjalizujące)
       hdc = BeginPaint(hWnd, &ps);
+      win_state = h/2;
       drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height);
       drawrectT(hdc,w-w/4,h/4,L"Add Weight",24);
+      drawrectT(hdc,w-w/4,h/4+24*2,L"1",24);
+      drawrectT(hdc,w-w/4,h/4+24*4,L"0",24);
       EndPaint(hWnd, &ps);
       return 0;
     case WM_DESTROY: // coś tam do wyłączania programu, po prostu musi być aby komputer nie wybuchnął
@@ -191,7 +223,54 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         hdc = GetDC(hWnd);
         buf = check_coords(lParam); // reakcja guzika, buf jest zmienną która daje ID wciśniętego guzika
         drawrect(hdc,buttons[buf][0]+10,buttons[buf][1],buttons[buf][2],buttons[buf][3]); // tutaj na przykład wyświetla się prostokąt na koordynatach guzika jako znak, że działa
+        /* //debugging macierzy guzików
+        std::cout<<std::endl;
+        for(int i = 0; i<BUTTON_COUNT;i++)
+        {
+         std::cout<<i<<" "<<buttons[i][0]<<" "<<buttons[i][1]<<" "<<buttons[i][2]<<" "<<buttons[i][3]<<std::endl;
+        }
+        std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
+        */
+        if(buf==2 && win_state+win_height<h-10)
+        {
+            std::cout << win_goal<<std::endl;
+            win_goal= win_goal+50;
+            std::cout << win_goal;
+        }
+        if(buf==3 && win_state>10) 
+        {
+            std::cout << win_goal<<std::endl;
+            win_goal= win_goal-50;
+            std::cout << win_goal<<std::endl;
+            std::cout << win_state;
+        }
+//przesuwanie windy
+        if(win_state<win_goal)
+        {
+            while(win_state<win_goal && win_state+win_height<h-10)
+            {              
+                hdc = GetDC(hWnd);
+                clearrect(hdc,w/2-win_width/2,win_state,win_width,win_height);  
+                drawrect(hdc,w/2-win_width/2,win_state+VELOCITY,win_width,win_height);           
+                ReleaseDC(hWnd, hdc);
+                win_state = win_state+VELOCITY;
+            }
+        }
+        if(win_state>win_goal)
+        {
+            
+            while(win_state>win_goal && win_state>10)//
+            {
+                      
+                hdc = GetDC(hWnd);
+                clearrect(hdc,w/2-win_width/2,win_state,win_width,win_height);  
+                drawrect(hdc,w/2-win_width/2,win_state-VELOCITY,win_width,win_height);           
+                ReleaseDC(hWnd, hdc);
+                win_state = win_state-VELOCITY;
+            }
+        }
         ReleaseDC(hWnd, hdc);
+//przesuwanie windy
         return 0;
     case WM_MOUSEMOVE:
          // tu można dać coś tak myszka się rusza
