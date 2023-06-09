@@ -6,3 +6,7 @@ funkcja LRESULT CALLBACK WndProc(164) służy do odpowiadania na bodźce zewnęt
 funkcja drawrectT(59) rysuje prostokąt z tekstem w środku, który jest typu WCHAR https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-drawing-text-use?source=recommendations
 Komentarze w clearrect przypisują się również do drawrect, bo to są w zasadzie te same funkcje, z różnicą że clear robi biały prostokąt. coś na zasadzie gumki
 rzeczy takie jak WM_PAINT, WM_LBUTTONDOWN są to tak zwane "message", czyli wiadomości dla programu z systemu https://learn.microsoft.com/en-us/windows/win32/winmsg/using-messages-and-message-queues
+
+TODO
+hitboxy przycisków się nie zgadzają
+zmienne globalne wrzucić do klasy
