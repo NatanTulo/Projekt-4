@@ -9,8 +9,9 @@ const int a = 255;
 const int r = 0;
 const int g = 20;
 const int b = 255;
-const int win_width =250; // szerokość i wysokość windy
-const int win_height = 350;
+const int win_width =150; // szerokość i wysokość windy
+const int win_height = 250;
+const int win_margin = 5;
 const int BUTTON_COUNT = 5;
 int win_goal = 0;
 int win_state = 0;
@@ -30,31 +31,24 @@ using namespace Gdiplus;
 void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
 {
     HWND hwnd = GetActiveWindow();
-    int width;
-    int height;
-    RECT rect;
-    if (GetWindowRect(hwnd, &rect))
-    {
-        width = rect.right - rect.left;
-        height = rect.bottom - rect.top;       
-    }
-	Graphics graphics(hdc);
+	Gdiplus::Graphics graphics(hdc);
 	Pen pen(Color(a,r,g,b));
     
 	graphics.DrawRectangle(&pen,Rx,Ry,w,h);    
 }
+void drawline(HDC hdc,int x1, int y1,int x2, int y2, int width)
+{
+    HWND hwnd = GetActiveWindow();
+	Gdiplus::Graphics graphics(hdc);
+	Pen pen(Color(a,0,0,0));
+    pen.SetWidth(width);
+    
+    graphics.DrawLine(&pen,x1,y1,x2,y2);
+}
 void clearrect(HDC hdc,int Rx, int Ry,int w, int h)
 {
     HWND hwnd = GetActiveWindow(); // hwnd to inaczej "handle window", czyli jakby wzięcie okienka do obróbki
-    int width;
-    int height;
-    RECT rect; //weź prostokąt okienka
-    if (GetWindowRect(hwnd, &rect))
-    {
-        width = rect.right - rect.left; // i weź z niego roździelczość
-        height = rect.bottom - rect.top;       
-    }
-	Graphics graphics(hdc);
+	Gdiplus::Graphics graphics(hdc);
 	Pen pen(Color(a,255,255,255));
     
 	graphics.DrawRectangle(&pen,Rx,Ry,w,h);    
@@ -62,7 +56,7 @@ void clearrect(HDC hdc,int Rx, int Ry,int w, int h)
 void drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value)
 {
     
-    Graphics    graphics(hdc);
+    Gdiplus::Graphics    graphics(hdc);
     SolidBrush  brush(Color(a,r,g,b));
     FontFamily  fontFamily(L"Comic Sans MS");
     Font        font(&fontFamily, font_value, FontStyleRegular, UnitPixel);
@@ -152,9 +146,9 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
         {
             win_state = win_state+VELOCITY;
             hdc = GetDC(hWnd);
-            clearrect(hdc,width-width/2,win_state+1,win_width,win_height);
-            drawrect(hdc,width-width/2,win_state,win_width,win_height);
-            clearrect(hdc,width-width/2,win_state-1,win_width,win_height);
+            clearrect(hdc,width/2,win_state+1,win_width,win_height);
+            drawrect(hdc,width/2,win_state,win_width,win_height);
+            clearrect(hdc,width/2,win_state-1,win_width,win_height);
             ReleaseDC(hWnd, hdc);
         }
         
@@ -208,14 +202,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
    switch(message)
    {
     case WM_PAINT: // pierwsze pomalowanie (inicjalizujące)
-      hdc = BeginPaint(hWnd, &ps);
-      win_state = h/2;
-      drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height);
-      drawrectT(hdc,w-w/4,h/4,L"Add Weight",24);
-      drawrectT(hdc,w-w/4,h/4+24*2,L"1",24);
-      drawrectT(hdc,w-w/4,h/4+24*4,L"0",24);
-      EndPaint(hWnd, &ps);
-      return 0;
+        hdc = BeginPaint(hWnd, &ps);
+        win_state = h/2;
+        drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height); // winda
+        drawrect(hdc,w/2-win_width/2-win_margin,5,win_width+2*win_margin,h-5); // szyb windy
+        drawline(hdc,0,h/5,w/2-win_width/2-win_margin,h/5,5); // lewe piętra --
+        drawline(hdc,0,2*h/5,w/2-win_width/2-win_margin,2*h/5,5);
+        drawline(hdc,0,3*h/5,w/2-win_width/2-win_margin,3*h/5,5);
+        drawline(hdc,0,4*h/5,w/2-win_width/2-win_margin,4*h/5,5); // lewe piętra --
+        drawline(hdc,rect.right,h/5,w/2+win_width/2+win_margin,h/5,5); // prawe piętra --
+        drawline(hdc,rect.right,2*h/5,w/2+win_width/2+win_margin,2*h/5,5);
+        drawline(hdc,rect.right,3*h/5,w/2+win_width/2+win_margin,3*h/5,5);
+        drawline(hdc,rect.right,4*h/5,w/2+win_width/2+win_margin,4*h/5,5); // prawe piętra --
+        drawrectT(hdc,w-w/4,h/4,L"Add Weight",24);
+        drawrectT(hdc,w-w/4,h/4+24*2,L"1",24);
+        drawrectT(hdc,w-w/4,h/4+24*4,L"0",24);
+        EndPaint(hWnd, &ps);
+        return 0;
     case WM_DESTROY: // coś tam do wyłączania programu, po prostu musi być aby komputer nie wybuchnął
       PostQuitMessage(0);
       return 0;
