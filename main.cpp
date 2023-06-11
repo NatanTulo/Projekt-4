@@ -290,7 +290,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         if(buf%6==0)
         {
             std::cout << data.win_goal<<std::endl;
-            data.win_goal= data.win_goal;
+            data.win_goal= data.win_state;
             std::cout << data.win_goal;
         }
 //przesuwanie windy
