@@ -27,7 +27,7 @@ private:
 
 
 public:
-int buttons[BUTTON_COUNT][4] ={ //x,y,width,heigth
+int buttons[BUTTON_COUNT][5] ={ //x,y,width,heigth,ID_piętra
     {},
     {},
     {},
@@ -64,7 +64,7 @@ void clearrect(HDC hdc,int Rx, int Ry,int w, int h)
     
 	graphics.DrawRectangle(&pen,Rx,Ry,w,h);    
 }
-Button_Data drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value, Button_Data dt)
+Button_Data drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value,int ID, Button_Data dt)
 {
     
     Gdiplus::Graphics    graphics(hdc);
@@ -86,6 +86,7 @@ Button_Data drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value, Butt
         dt.buttons[i][1] = y;
         dt.buttons[i][2] = font_value*length;
         dt.buttons[i][3] = font_value*Textbox_heigth_mult;
+        dt.buttons[i][4] = ID;
         i= BUTTON_COUNT;
      }   
      else
@@ -96,15 +97,15 @@ Button_Data drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value, Butt
     
     return dt;
 }
-Button_Data draw_panel(Button_Data dt,HDC hdc,int x,int y,const WCHAR* text1,const WCHAR* text2,const WCHAR* text3,const WCHAR* text4,int font_value)
+Button_Data draw_panel(Button_Data dt,HDC hdc,int font_value,int x,int y,const WCHAR* text1,const WCHAR* text2,const WCHAR* text3,const WCHAR* text4,int ID1, int ID2, int ID3, int ID4)
 {
     size_t length1 = wcslen(text1);
     size_t length3 = wcslen(text3);
 
-    dt = drawrectT(hdc,x,y,text1,font_value,dt);
-    dt = drawrectT(hdc,x+length1*font_value*Horizontal_panel_dispersion,y,text2,font_value,dt);
-    dt = drawrectT(hdc,x,y+font_value*Vertical_panel_dispersion,text3,font_value,dt);
-    dt = drawrectT(hdc,x+length3*font_value*Horizontal_panel_dispersion,y+font_value*Vertical_panel_dispersion,text4,font_value,dt);
+    dt = drawrectT(hdc,x,y,text1,font_value,ID1,dt);
+    dt = drawrectT(hdc,x+length1*font_value*Horizontal_panel_dispersion,y,text2,font_value,ID2,dt);
+    dt = drawrectT(hdc,x,y+font_value*Vertical_panel_dispersion,text3,font_value,ID3,dt);
+    dt = drawrectT(hdc,x+length3*font_value*Horizontal_panel_dispersion,y+font_value*Vertical_panel_dispersion,text4,font_value,ID4,dt);
     return dt;
 }
 
@@ -180,7 +181,7 @@ int check_coords(LPARAM lParam, Button_Data dt)
             {
             std::cout<<dt.buttons[i][1]<<" "<<dt.buttons[i][1]+dt.buttons[i][3]<<std::endl;
             std::cout<<"Button"<<std::endl;
-            return i+1;
+            return dt.buttons[i][4];
             }
             
             
@@ -198,6 +199,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
    PAINTSTRUCT  ps;
    RECT rect;
    
+   
    int w;
    int h;
     if (GetWindowRect(hWnd, &rect))
@@ -206,8 +208,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
        h = rect.bottom - rect.top;   
          
     }
+    int wys=h-30; // do usunięcia po poprawieniu równania na h
+    const float p0 =wys/5+2*wys/3;
+    const float p1 =2*h/3;
+    const float p2 =wys/5+wys/3;
+    const float p3 =h/3;
+    const float p4 =wys/5;
     int buf = 0;
-   int wys=h-30; // do usunięcia po poprawieniu równania na h
+   
    switch(message)
    {
     case WM_PAINT: // pierwsze pomalowanie (inicjalizujące)
@@ -216,17 +224,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
       data.win_state = h/2;
         drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height); // winda
         drawrect(hdc,w/2-win_width/2-win_margin,win_margin,win_width+2*win_margin,wys-2*win_margin); // szyb windy
-        drawline(hdc,0,wys/5+2*wys/3,w/2-win_width/2-win_margin,wys/5+2*wys/3,5);   // 1 piętro
-        drawline(hdc,rect.right,2*h/3,w/2+win_width/2+win_margin,2*h/3,5);          // 2 piętro
-        drawline(hdc,0,wys/5+wys/3,w/2-win_width/2-win_margin,wys/5+wys/3,5);       // 3 piętro
-        drawline(hdc,rect.right,h/3,w/2+win_width/2+win_margin,h/3,5);              // 4 piętro
-        drawline(hdc,0,wys/5,w/2-win_width/2-win_margin,wys/5,5);                   // 5 piętro
-     data = draw_panel(data,hdc,w-w/4,h/4,L"1",L"1",L"1",L"1",24);
+        drawline(hdc,0,p0,w/2-win_width/2-win_margin,p0,5);                         // 0 piętro (parter)
+        drawline(hdc,rect.right,p1,w/2+win_width/2+win_margin,p1,5);                // 1 piętro
+        drawline(hdc,0,p2,w/2-win_width/2-win_margin,p2,5);                         // 2 piętro
+        drawline(hdc,rect.right,p3,w/2+win_width/2+win_margin,p3,5);                // 3 piętro
+        drawline(hdc,0,p4,w/2-win_width/2-win_margin,p4,5);                         // 4 piętro
+        data = draw_panel(data,hdc,24,w-w/4,h/4,L"1",L"2",L"3",L"4",1,2,3,4);
      
      std::cout<<std::endl;
         for(int i = 0; i<BUTTON_COUNT;i++)
         {
-         std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<std::endl;
+         std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
         }
         std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
       EndPaint(hWnd, &ps);
@@ -247,18 +255,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         }
         std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
         
-        if(buf==2 && data.win_state+win_height<h-10)
+        if(buf%5==1)
         {
             std::cout << data.win_goal<<std::endl;
-            data.win_goal= 2*wys/3+wys/5;
+            data.win_goal= p0;
             std::cout << data.win_goal;
         }
-        if(buf==3 && data.win_state>10) 
+        if(buf%5==2)
         {
             std::cout << data.win_goal<<std::endl;
-            data.win_goal= 2*h/3;
+            data.win_goal= p1;
+            std::cout << data.win_goal;
+        }
+        if(buf%5==3) 
+        {
+            std::cout << data.win_goal<<std::endl;
+            data.win_goal= p2;
             std::cout << data.win_goal<<std::endl;
             std::cout << data.win_state;
+        }
+        if(buf%5==4)
+        {
+            std::cout << data.win_goal<<std::endl;
+            data.win_goal= p3;
+            std::cout << data.win_goal;
+        }
+        if(buf%5==0)
+        {
+            std::cout << data.win_goal<<std::endl;
+            data.win_goal= p4;
+            std::cout << data.win_goal;
         }
 //przesuwanie windy
         if(data.win_state<data.win_goal)
