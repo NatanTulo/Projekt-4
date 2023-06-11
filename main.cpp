@@ -9,8 +9,8 @@ const int a = 255;
 const int r = 0;
 const int g = 20;
 const int b = 255;
-const int win_width =150; // szerokość i wysokość windy
-const int win_height = 250;
+const int win_width =200; // szerokość i wysokość windy
+const int win_height = 120;
 const int win_margin = 5;
 const int BUTTON_COUNT = 5;
 int win_goal = 0;
@@ -198,22 +198,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
        h = rect.bottom - rect.top;       
     }
     int buf;
-   
+   int wys=h-30; // do usunięcia po poprawieniu równania na h
    switch(message)
    {
     case WM_PAINT: // pierwsze pomalowanie (inicjalizujące)
         hdc = BeginPaint(hWnd, &ps);
         win_state = h/2;
         drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height); // winda
-        drawrect(hdc,w/2-win_width/2-win_margin,5,win_width+2*win_margin,h-5); // szyb windy
-        drawline(hdc,0,h/5,w/2-win_width/2-win_margin,h/5,5); // lewe piętra --
-        drawline(hdc,0,2*h/5,w/2-win_width/2-win_margin,2*h/5,5);
-        drawline(hdc,0,3*h/5,w/2-win_width/2-win_margin,3*h/5,5);
-        drawline(hdc,0,4*h/5,w/2-win_width/2-win_margin,4*h/5,5); // lewe piętra --
-        drawline(hdc,rect.right,h/5,w/2+win_width/2+win_margin,h/5,5); // prawe piętra --
-        drawline(hdc,rect.right,2*h/5,w/2+win_width/2+win_margin,2*h/5,5);
-        drawline(hdc,rect.right,3*h/5,w/2+win_width/2+win_margin,3*h/5,5);
-        drawline(hdc,rect.right,4*h/5,w/2+win_width/2+win_margin,4*h/5,5); // prawe piętra --
+        drawrect(hdc,w/2-win_width/2-win_margin,win_margin,win_width+2*win_margin,wys-2*win_margin); // szyb windy
+        drawline(hdc,0,wys/5+2*wys/3,w/2-win_width/2-win_margin,wys/5+2*wys/3,5);   // 1 piętro
+        drawline(hdc,rect.right,2*h/3,w/2+win_width/2+win_margin,2*h/3,5);          // 2 piętro
+        drawline(hdc,0,wys/5+wys/3,w/2-win_width/2-win_margin,wys/5+wys/3,5);       // 3 piętro
+        drawline(hdc,rect.right,h/3,w/2+win_width/2+win_margin,h/3,5);              // 4 piętro
+        drawline(hdc,0,wys/5,w/2-win_width/2-win_margin,wys/5,5);                   // 5 piętro
         drawrectT(hdc,w-w/4,h/4,L"Add Weight",24);
         drawrectT(hdc,w-w/4,h/4+24*2,L"1",24);
         drawrectT(hdc,w-w/4,h/4+24*4,L"0",24);
@@ -237,20 +234,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         if(buf==2 && win_state+win_height<h-10)
         {
             std::cout << win_goal<<std::endl;
-            win_goal= win_goal+50;
+            win_goal= 2*wys/3+wys/5;
             std::cout << win_goal;
         }
         if(buf==3 && win_state>10) 
         {
             std::cout << win_goal<<std::endl;
-            win_goal= win_goal-50;
+            win_goal= 2*h/3;
             std::cout << win_goal<<std::endl;
             std::cout << win_state;
         }
 //przesuwanie windy
         if(win_state<win_goal)
         {
-            while(win_state<win_goal && win_state+win_height<h-10)
+            while(win_state<win_goal && win_state+win_height<wys-2*win_margin)
             {              
                 hdc = GetDC(hWnd);
                 clearrect(hdc,w/2-win_width/2,win_state,win_width,win_height);  
@@ -262,7 +259,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         if(win_state>win_goal)
         {
             
-            while(win_state>win_goal && win_state>10)//
+            while(win_state>win_goal && win_state>2*win_margin)//
             {
                       
                 hdc = GetDC(hWnd);

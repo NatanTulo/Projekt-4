@@ -10,5 +10,5 @@ rzeczy takie jak WM_PAINT, WM_LBUTTONDOWN są to tak zwane "message", czyli wiad
 TODO
 hitboxy przycisków się nie zgadzają
 zmienne globalne wrzucić do klasy
-poprawić dół szybu
 wyrównać linie - po lewej jest 8 px więcej
+poprawić wysokość okna
