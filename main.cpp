@@ -210,8 +210,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     const float p2 =wys/5+wys/3;
     const float p3 =h/3;
     const float p4 =wys/5;
+    const int font_value=24;
     int buf = 0;
-   
+
    switch(message)
    {
     case WM_PAINT: // pierwsze pomalowanie (inicjalizujące)
@@ -219,13 +220,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
       hdc = BeginPaint(hWnd, &ps);
       data.win_state = h/2;
         drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height); // winda
-        drawrect(hdc,w/2-win_width/2-win_margin,win_margin,win_width+2*win_margin,wys-2*win_margin); // szyb windy
+        drawrect(hdc,w/2-win_width/2-win_margin,4*win_margin,win_width+2*win_margin,wys-5*win_margin); // szyb windy
         drawline(hdc,0,p0,w/2-win_width/2-win_margin,p0,5);                         // 0 piętro (parter)
+        data = draw_panel(data,hdc,font_value,w/40,p0-2*font_value*Vertical_panel_dispersion,L"1",L"2",L"3",L"4",2,3,4,5);
         drawline(hdc,rect.right,p1,w/2+win_width/2+win_margin,p1,5);                // 1 piętro
+        data = draw_panel(data,hdc,font_value,75*w/80,p1-2*font_value*Vertical_panel_dispersion,L"0",L"2",L"3",L"4",1,3,4,5);
         drawline(hdc,0,p2,w/2-win_width/2-win_margin,p2,5);                         // 2 piętro
+        data = draw_panel(data,hdc,font_value,w/40,p2-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"3",L"4",1,2,4,5);
         drawline(hdc,rect.right,p3,w/2+win_width/2+win_margin,p3,5);                // 3 piętro
+        data = draw_panel(data,hdc,font_value,75*w/80,p3-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"4",1,2,3,5);
         drawline(hdc,0,p4,w/2-win_width/2-win_margin,p4,5);                         // 4 piętro
-        data = draw_panel(data,hdc,24,w-w/4,h/4,L"1",L"2",L"3",L"4",1,2,3,4);
+        data = draw_panel(data,hdc,font_value,w/40,p4-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"3",1,2,3,4);
      
      std::cout<<std::endl;
         for(int i = 0; i<BUTTON_COUNT;i++)
@@ -251,35 +256,41 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         }
         std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
         
-        if(buf%5==1)
+        if(buf%6==1)
         {
             std::cout << data.win_goal<<std::endl;
-            data.win_goal= p0;
+            data.win_goal= p0-win_height;
             std::cout << data.win_goal;
         }
-        if(buf%5==2)
+        if(buf%6==2)
         {
             std::cout << data.win_goal<<std::endl;
-            data.win_goal= p1;
+            data.win_goal= p1-win_height;
             std::cout << data.win_goal;
         }
-        if(buf%5==3) 
+        if(buf%6==3) 
         {
             std::cout << data.win_goal<<std::endl;
-            data.win_goal= p2;
+            data.win_goal= p2-win_height;
             std::cout << data.win_goal<<std::endl;
             std::cout << data.win_state;
         }
-        if(buf%5==4)
+        if(buf%6==4)
         {
             std::cout << data.win_goal<<std::endl;
-            data.win_goal= p3;
+            data.win_goal= p3-win_height;
             std::cout << data.win_goal;
         }
-        if(buf%5==0)
+        if(buf%6==5)
         {
             std::cout << data.win_goal<<std::endl;
-            data.win_goal= p4;
+            data.win_goal= p4-win_height;
+            std::cout << data.win_goal;
+        }
+        if(buf%6==0)
+        {
+            std::cout << data.win_goal<<std::endl;
+            data.win_goal= data.win_goal;
             std::cout << data.win_goal;
         }
 //przesuwanie windy
