@@ -23,21 +23,17 @@ const int VELOCITY = 1;
 
 
 class Button_Data{
-private:
-
-
-public:
-int buttons[BUTTON_COUNT][5] ={ //x,y,width,heigth,ID_piętra
-    {},
-    {},
-    {},
-    {},
-    {},
+    public:
+        int buttons[BUTTON_COUNT][5] ={ //x,y,width,heigth,ID_piętra
+            {},
+            {},
+            {},
+            {},
+            {},
+        };
+        int win_goal = 0;
+        int win_state = 0;
 };
-int win_goal = 0;
-int win_state = 0;
-};
-Button_Data data;  
 
 void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
 {
@@ -197,8 +193,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 {
    HDC          hdc;
    PAINTSTRUCT  ps;
-   RECT rect;
-   
+   RECT         rect;
+   static Button_Data  data;  
    
    int w;
    int h;
