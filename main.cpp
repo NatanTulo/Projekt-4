@@ -3,7 +3,8 @@
 #include <iostream>
 #include <objidl.h>
 #include <string>
-#include <map>
+#include <vector>
+
 using namespace Gdiplus;
 
 const int a = 255;
@@ -17,6 +18,9 @@ const int BUTTON_COUNT = 30;
 const float Horizontal_panel_dispersion = 1.2;
 const float Vertical_panel_dispersion = 2;
 const double Textbox_heigth_mult = 1.5;
+const int boxL_width = 100;
+const int boxL_Heigth = 60;
+const int LEVEL_COUNT = 5;
 
 const int VELOCITY = 1;
 
@@ -33,13 +37,15 @@ class Button_Data{
         };
         int win_goal = 0;
         int win_state = 0;
+        std::vector<int> q_up; 
+        std::vector<int> q_down; 
 };
 
 void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
 {
     HWND hwnd = GetActiveWindow();
 	Gdiplus::Graphics graphics(hdc);
-	Pen pen(Color(a,r,g,b));
+	Gdiplus::Pen pen(Gdiplus::Color(a,r,g,b));
     
 	graphics.DrawRectangle(&pen,Rx,Ry,w,h);    
 }
@@ -47,7 +53,7 @@ void drawline(HDC hdc,int x1, int y1,int x2, int y2, int width)
 {
     HWND hwnd = GetActiveWindow();
 	Gdiplus::Graphics graphics(hdc);
-	Pen pen(Color(a,0,0,0));
+	Gdiplus::Pen pen(Gdiplus::Color(a,0,0,0));
     pen.SetWidth(width);
     
     graphics.DrawLine(&pen,x1,y1,x2,y2);
@@ -56,7 +62,7 @@ void clearrect(HDC hdc,int Rx, int Ry,int w, int h)
 {
     HWND hwnd = GetActiveWindow(); // hwnd to inaczej "handle window", czyli jakby wzięcie okienka do obróbki
 	Gdiplus::Graphics graphics(hdc);
-	Pen pen(Color(a,255,255,255));
+	Gdiplus::Pen pen(Gdiplus::Color(a,255,255,255));
     
 	graphics.DrawRectangle(&pen,Rx,Ry,w,h);    
 }
@@ -64,11 +70,11 @@ Button_Data drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value,int I
 {
     
     Gdiplus::Graphics    graphics(hdc);
-    SolidBrush  brush(Color(a,r,g,b));
+    SolidBrush  brush(Gdiplus::Color(a,r,g,b));
     FontFamily  fontFamily(L"Comic Sans MS");
-    Font        font(&fontFamily, font_value, FontStyleRegular, UnitPixel);
+    Gdiplus::Font        font(&fontFamily, font_value, FontStyleRegular, UnitPixel);
     PointF      pointF(x,y);
-    Pen         pen(Color(a,r,g,b));
+    Gdiplus::Pen         pen(Gdiplus::Color(a,r,g,b));
     size_t length = wcslen(text);
     graphics.DrawString(text, length, &font, pointF, &brush);
     graphics.DrawRectangle(&pen,x,y,font_value*length,font_value*Textbox_heigth_mult);  
@@ -92,6 +98,28 @@ Button_Data drawrectT(HDC hdc,int x,int y,const WCHAR* text,int font_value,int I
     } while (i<BUTTON_COUNT);
     
     return dt;
+}
+void drawrectL(HDC hdc,int x,int y,int number,int font_value)
+{
+    
+    Gdiplus::Graphics    graphics(hdc);
+    SolidBrush  brush(Gdiplus::Color(255,255,255,255));
+    SolidBrush  brush2(Gdiplus::Color(a,r,g,b));
+    FontFamily  fontFamily(L"Comic Sans MS");
+    Gdiplus::Font        font(&fontFamily, font_value, FontStyleRegular, UnitPixel);
+    PointF      pointF(x,y);
+    Gdiplus::Pen         pen(Gdiplus::Color(a,r,g,b));
+    
+
+    
+    std::wstring numberString = std::to_wstring(number);
+    const wchar_t* text = numberString.c_str();
+    
+    graphics.FillRectangle(&brush,x,y,boxL_width,boxL_Heigth);  
+    graphics.DrawString(text, -1, &font, pointF, &brush2);
+    graphics.DrawRectangle(&pen,x,y,boxL_width,boxL_Heigth);  
+   
+    
 }
 Button_Data draw_panel(Button_Data dt,HDC hdc,int font_value,int x,int y,const WCHAR* text1,const WCHAR* text2,const WCHAR* text3,const WCHAR* text4,int ID1, int ID2, int ID3, int ID4)
 {
@@ -186,7 +214,23 @@ int check_coords(LPARAM lParam, Button_Data dt)
     return 0;
 }
 
-
+bool dir_decide(LPARAM lParam, Button_Data data)
+{
+    if(data.win_goal<HIWORD(lParam))
+            return true;
+            else
+            return false;
+}
+int lev_decide(LPARAM lParam,const float tab[])
+{
+    
+    for(int i = 0; i<LEVEL_COUNT+1;i++)
+    {
+        if(HIWORD(lParam)>=tab[i] && HIWORD(lParam)<tab[i+1])
+        return tab[i];
+    }
+    
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, 
    WPARAM wParam,LPARAM lParam)
@@ -195,7 +239,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
    PAINTSTRUCT  ps;
    RECT         rect;
    static Button_Data  data;  
-   
+
+   bool going_up = false;
    int w;
    int h;
     if (GetWindowRect(hWnd, &rect))
@@ -210,8 +255,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     const float p2 =wys/5+wys/3;
     const float p3 =h/3;
     const float p4 =wys/5;
+    const float tab[LEVEL_COUNT+1] ={p0,p1,p2,p3,p4,h};
     const int font_value=24;
+    const int weightp_x = w-30-boxL_width;
+    const int weightp_y = 30;
+
     int buf = 0;
+    int win_weigth = 0;
 
    switch(message)
    {
@@ -221,17 +271,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
       data.win_state = h/2;
         drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height); // winda
         drawrect(hdc,w/2-win_width/2-win_margin,4*win_margin,win_width+2*win_margin,wys-5*win_margin); // szyb windy
+
         drawline(hdc,0,p0,w/2-win_width/2-win_margin,p0,5);                         // 0 piętro (parter)
         data = draw_panel(data,hdc,font_value,w/40,p0-2*font_value*Vertical_panel_dispersion,L"1",L"2",L"3",L"4",2,3,4,5);
+
         drawline(hdc,rect.right,p1,w/2+win_width/2+win_margin,p1,5);                // 1 piętro
         data = draw_panel(data,hdc,font_value,75*w/80,p1-2*font_value*Vertical_panel_dispersion,L"0",L"2",L"3",L"4",1,3,4,5);
+
         drawline(hdc,0,p2,w/2-win_width/2-win_margin,p2,5);                         // 2 piętro
         data = draw_panel(data,hdc,font_value,w/40,p2-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"3",L"4",1,2,4,5);
+
         drawline(hdc,rect.right,p3,w/2+win_width/2+win_margin,p3,5);                // 3 piętro
         data = draw_panel(data,hdc,font_value,75*w/80,p3-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"4",1,2,3,5);
+
         drawline(hdc,0,p4,w/2-win_width/2-win_margin,p4,5);                         // 4 piętro
         data = draw_panel(data,hdc,font_value,w/40,p4-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"3",1,2,3,4);
-     
+
+        drawrectL(hdc,weightp_x,weightp_y,0,font_value);
+        data = drawrectT(hdc,weightp_x-200,weightp_y,L"Start",font_value,7,data);
+
      std::cout<<std::endl;
         for(int i = 0; i<BUTTON_COUNT;i++)
         {
@@ -252,72 +310,175 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         std::cout<<std::endl;
         for(int i = 0; i<BUTTON_COUNT;i++)
         {
-         std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<std::endl;
+         std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
         }
         std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
         
-        if(buf%6==1)
-        {
+        if(buf==1)
+        {           
             std::cout << data.win_goal<<std::endl;
             data.win_goal= p0-win_height;
             std::cout << data.win_goal;
+            going_up = dir_decide(lParam,data);
+            if(going_up)
+            {
+                data.q_up.push_back(lev_decide(lParam,tab));
+                data.q_up.push_back(data.win_goal);
+            }
+            
+            else
+            {
+                data.q_down.push_back(lev_decide(lParam,tab));
+                data.q_down.push_back(data.win_goal);
+            }
+            
         }
-        if(buf%6==2)
+        if(buf==2)
         {
             std::cout << data.win_goal<<std::endl;
             data.win_goal= p1-win_height;
             std::cout << data.win_goal;
+            going_up = dir_decide(lParam,data);
+            if(going_up)
+            {
+                data.q_up.push_back(lev_decide(lParam,tab));
+                data.q_up.push_back(data.win_goal);
+            }
+            
+            else
+            {
+                data.q_down.push_back(lev_decide(lParam,tab));
+                data.q_down.push_back(data.win_goal);
+            }
         }
-        if(buf%6==3) 
+        if(buf==3) 
         {
             std::cout << data.win_goal<<std::endl;
             data.win_goal= p2-win_height;
             std::cout << data.win_goal<<std::endl;
             std::cout << data.win_state;
+            going_up = dir_decide(lParam,data);
+            if(going_up)
+            {
+                data.q_up.push_back(lev_decide(lParam,tab));
+                data.q_up.push_back(data.win_goal);
+            }
+            
+            else
+            {
+                data.q_down.push_back(lev_decide(lParam,tab));
+                data.q_down.push_back(data.win_goal);
+            }
         }
-        if(buf%6==4)
+        if(buf==4)
         {
             std::cout << data.win_goal<<std::endl;
             data.win_goal= p3-win_height;
             std::cout << data.win_goal;
+            going_up = dir_decide(lParam,data);
+            if(going_up)
+            {
+                data.q_up.push_back(lev_decide(lParam,tab));
+                data.q_up.push_back(data.win_goal);
+            }
+            
+            else
+            {
+                data.q_down.push_back(lev_decide(lParam,tab));
+                data.q_down.push_back(data.win_goal);
+            }
         }
-        if(buf%6==5)
+        if(buf==5)
         {
             std::cout << data.win_goal<<std::endl;
             data.win_goal= p4-win_height;
             std::cout << data.win_goal;
-        }
-        if(buf%6==0)
-        {
-            std::cout << data.win_goal<<std::endl;
-            data.win_goal= data.win_state;
-            std::cout << data.win_goal;
-        }
-//przesuwanie windy
-        if(data.win_state<data.win_goal)
-        {
-            while(data.win_state<data.win_goal && data.win_state+win_height<wys-2*win_margin)
-            {              
-                hdc = GetDC(hWnd);
-                clearrect(hdc,w/2-win_width/2,data.win_state,win_width,win_height);  
-                drawrect(hdc,w/2-win_width/2,data.win_state+VELOCITY,win_width,win_height);           
-                ReleaseDC(hWnd, hdc);
-                data.win_state = data.win_state+VELOCITY;
-            }
-        }
-        if(data.win_state>data.win_goal)
-        {
-            
-            while(data.win_state>data.win_goal && data.win_state>2*win_margin)//
+            going_up = dir_decide(lParam,data);
+            if(going_up)
             {
-                      
-                hdc = GetDC(hWnd);
-                clearrect(hdc,w/2-win_width/2,data.win_state,win_width,win_height);  
-                drawrect(hdc,w/2-win_width/2,data.win_state-VELOCITY,win_width,win_height);           
-                ReleaseDC(hWnd, hdc);
-                data.win_state = data.win_state-VELOCITY;
+                data.q_up.push_back(lev_decide(lParam,tab));
+                data.q_up.push_back(data.win_goal);
+            }
+            
+            else
+            {
+                data.q_down.push_back(lev_decide(lParam,tab));
+                data.q_down.push_back(data.win_goal);
             }
         }
+        if(buf==0)
+        {
+         std::cout << data.win_goal<<std::endl;
+         data.win_goal= data.win_state;
+          std::cout << data.win_goal;
+            going_up = dir_decide(lParam,data);
+            if(going_up)
+            {
+                data.q_up.push_back(lev_decide(lParam,tab));
+                data.q_up.push_back(data.win_goal);
+            }
+            
+            else
+            {
+                data.q_down.push_back(lev_decide(lParam,tab));
+                data.q_down.push_back(data.win_goal);
+            }
+        }
+
+        std::cout<<" "<<data.q_down.front();
+        drawrectL(hdc,weightp_x,weightp_y,win_weigth,font_value);
+        std::cout<<" "<<going_up;
+//przesuwanie windy
+        if(buf == 7)
+        { int i = 0;
+            std::cout<<"test";
+            std::cout<<data.q_up.empty()<<" "<<data.q_down.empty();
+            while(!(data.q_up.empty()&&data.q_down.empty()))
+            {
+                i++;
+                if(i==150) break;
+
+                std::cout<<!(data.q_up.empty()&&data.q_down.empty());
+                if(data.q_up.empty()) going_up = false;
+                if(going_up && !data.q_up.empty())
+                {
+                    data.win_goal = !data.q_up.front();
+                    data.q_up.pop_back();
+                }
+                else if(!going_up && data.q_down.empty())
+                {
+                    data.win_goal = data.q_down.front();
+                    data.q_down.pop_back();
+                }
+
+                if(data.win_state<data.win_goal)
+                {
+                    while(data.win_state<data.win_goal && data.win_state+win_height<wys-2*win_margin)
+                    {              
+                        hdc = GetDC(hWnd);
+                        clearrect(hdc,w/2-win_width/2,data.win_state,win_width,win_height);  
+                        drawrect(hdc,w/2-win_width/2,data.win_state+VELOCITY,win_width,win_height);           
+                        ReleaseDC(hWnd, hdc);
+                        data.win_state = data.win_state+VELOCITY;
+                    }
+                }
+                if(data.win_state>data.win_goal)
+                {
+                    
+                    while(data.win_state>data.win_goal && data.win_state>2*win_margin)//
+                    {
+                            
+                        hdc = GetDC(hWnd);
+                        clearrect(hdc,w/2-win_width/2,data.win_state,win_width,win_height);  
+                        drawrect(hdc,w/2-win_width/2,data.win_state-VELOCITY,win_width,win_height);           
+                        ReleaseDC(hWnd, hdc);
+                        data.win_state = data.win_state-VELOCITY;
+                    }
+                }
+            }
+           
+        }
+        
         ReleaseDC(hWnd, hdc);
 //przesuwanie windy
         return 0;
