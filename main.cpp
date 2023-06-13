@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <algorithm>
 
 using namespace Gdiplus;
 
@@ -40,6 +41,8 @@ class Button_Data{
         int win_state = 0;
         std::queue<unsigned int> q_up; 
         std::queue<unsigned int> q_down; 
+        std::vector<unsigned int> v_up; 
+        std::vector<unsigned int> v_down;
 };
 
 void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
@@ -201,11 +204,11 @@ int check_coords(LPARAM lParam, Button_Data dt)
         
         if(dt.buttons[i][0]<=x && dt.buttons[i][0]+dt.buttons[i][2]>x)
         {
-            std::cout<<std::endl<<dt.buttons[i][0]<<" "<<dt.buttons[i][0]+dt.buttons[i][2]<<std::endl;
+           // std::cout<<std::endl<<dt.buttons[i][0]<<" "<<dt.buttons[i][0]+dt.buttons[i][2]<<std::endl;
             if(dt.buttons[i][1]<=y && dt.buttons[i][1]+dt.buttons[i][3]>y)
             {
-            std::cout<<dt.buttons[i][1]<<" "<<dt.buttons[i][1]+dt.buttons[i][3]<<std::endl;
-            std::cout<<"Button"<<std::endl;
+           // std::cout<<dt.buttons[i][1]<<" "<<dt.buttons[i][1]+dt.buttons[i][3]<<std::endl;
+           // std::cout<<"Button"<<std::endl;
             return dt.buttons[i][4];
             }
             
@@ -276,8 +279,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     case WM_PAINT: // pierwsze pomalowanie (inicjalizujące)
       
       hdc = BeginPaint(hWnd, &ps);
-      data.win_state = h/2;
-        drawrect(hdc,w/2-win_width/2,h/2,win_width,win_height); // winda
+      data.win_state = p0-win_height;
+        drawrect(hdc,w/2-win_width/2,data.win_state,win_width,win_height); // winda
         drawrect(hdc,w/2-win_width/2-win_margin,4*win_margin,win_width+2*win_margin,wys-5*win_margin); // szyb windy
 
         drawline(hdc,0,p0,w/2-win_width/2-win_margin,p0,5);                         // 0 piętro (parter)
@@ -298,11 +301,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         drawrectL(hdc,weightp_x,weightp_y,0,font_value);
         data = drawrectT(hdc,weightp_x-200,weightp_y,L"Start",font_value,7,data);
 
-     std::cout<<std::endl;
-        for(int i = 0; i<BUTTON_COUNT;i++)
-        {
-         std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
-        }
+   //  std::cout<<std::endl;
+    //    for(int i = 0; i<BUTTON_COUNT;i++)
+    //    {
+    //     std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
+   //     }
         std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
       EndPaint(hWnd, &ps);
       return 0;
@@ -315,11 +318,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         buf = check_coords(lParam,data); // reakcja guzika, buf jest zmienną która daje ID wciśniętego guzika
          
          //debugging macierzy guzików
-        std::cout<<std::endl;
-        for(int i = 0; i<BUTTON_COUNT;i++)
-        {
-         std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
-        }
+       // std::cout<<std::endl;
+       // for(int i = 0; i<BUTTON_COUNT;i++)
+       // {
+       //  std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
+       // }
        // std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
         
         if(buf>=0 && buf<6)
@@ -340,16 +343,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                data.q_up.push(lev_decide(lParam,tab)-win_height);
-                data.q_up.push(data.win_goal);
+                data.v_up.push_back(lev_decide(lParam,tab)-win_height);
+                data.v_up.push_back(data.win_goal);
             }
             
             else
             {
-                data.q_down.push(lev_decide(lParam,tab)-win_height);
-                data.q_down.push(data.win_goal);
+                data.v_down.push_back(lev_decide(lParam,tab)-win_height);
+                data.v_down.push_back(data.win_goal);
             }
-            
+                       
         }
 
         
@@ -360,21 +363,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         std::cout<<"going_up "<<going_up<<std::endl;
 //przesuwanie windy
         if(buf == 7)
-        { int i = 0;
+        { 
+            int size_up = data.v_up.size();
+            int size_down = data.v_down.size();
+
+            std::sort(data.v_up.begin(), data.v_up.end());
+            auto unique_end = std::unique(data.v_up.begin(), data.v_up.end());
+            data.v_up.erase(unique_end, data.v_up.end());
+            for (const auto& element : data.v_up) 
+            {
+                data.q_up.push(element);
+            }
+            std::sort(data.v_down.begin(), data.v_down.end());
+            auto unique_end2 = std::unique(data.v_down.begin(), data.v_down.end());
+            data.v_down.erase(unique_end2, data.v_down.end());
+            for (const auto& element : data.v_down) 
+            {
+                data.q_down.push(element);
+            }
+            data.v_down.clear();
+            data.v_up.clear();
+
+            int i = 0;
             std::cout<<"test ";
             //std::cout<<data.q_up.empty()<<" "<<data.q_down.empty();
             while(!(data.q_up.empty()&&data.q_down.empty()))
             {
                 //std::cout<<"test2 ";
                 i++;
-                if(i==150) break;
+                if(i==100) break;
 
-               // for(int i = 0;i<data.q_down.size();i++)
-               // {
-               //     std::cout<<data.q_down.front()<<" ";
-               // }
+               
 
-                std::cout<<" end " ;
                 if(data.q_up.empty()) going_up = false;
                 if(going_up && !data.q_up.empty())
                 {
@@ -413,7 +433,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                         data.win_state = data.win_state-VELOCITY;
                     }
                 }
-                
+             
+                std::cout<<" end " ;                  
             }
            
         }
@@ -421,6 +442,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         ReleaseDC(hWnd, hdc);
 //przesuwanie windy
         return 0;
+    
     
         
    default:
