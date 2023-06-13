@@ -45,6 +45,9 @@
         "map": "cpp",
         "string": "cpp",
         "xtree": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "algorithm": "cpp",
+        "deque": "cpp",
+        "queue": "cpp"
     }
 }

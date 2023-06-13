@@ -38,8 +38,8 @@ class Button_Data{
         };
         int win_goal = 0;
         int win_state = 0;
-        std::queue<int> q_up; 
-        std::queue<int> q_down; 
+        std::queue<unsigned int> q_up; 
+        std::queue<unsigned int> q_down; 
 };
 
 void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
@@ -224,11 +224,16 @@ bool dir_decide(LPARAM lParam, Button_Data data)
 }
 int lev_decide(LPARAM lParam,const float tab[])
 {
-    
-    for(int i = 0; i<LEVEL_COUNT+1;i++)
+    std::cout<<std::endl<<"Mouse Y for lev_decide: "<<HIWORD(lParam)<<std::endl;
+    for(int i = 0; i<LEVEL_COUNT;i++)
     {
+        std::cout<<std::endl<<"lev_decide process: "<<tab[i]<<" "<<tab[i+1]<<std::endl;
         if(HIWORD(lParam)>=tab[i] && HIWORD(lParam)<tab[i+1])
-        return tab[i];
+        {
+            std::cout<<std::endl<<"lev_decide output: "<<tab[i+1]<<std::endl;
+            return tab[i+1];
+        }
+        
     }
     
 }
@@ -256,10 +261,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     const float p2 =wys/5+wys/3;
     const float p3 =h/3;
     const float p4 =wys/5;
-    const float tab[LEVEL_COUNT+1] ={p0,p1,p2,p3,p4,h};
+    const float tab[LEVEL_COUNT+1] ={0,p4,p3,p2,p1,p0};
     const int font_value=24;
     const int weightp_x = w-30-boxL_width;
     const int weightp_y = 30;
+
+    
 
     int buf = 0;
     int win_weigth = 0;
@@ -313,126 +320,48 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         {
          std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
         }
-        std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
+       // std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
         
-        if(buf==1)
-        {           
-            std::cout << data.win_goal<<std::endl;
-            data.win_goal= p0-win_height;
-            std::cout << data.win_goal;
-            going_up = dir_decide(lParam,data);
-            if(going_up)
-            {
-                data.q_up.push(lev_decide(lParam,tab));
-                data.q_up.push(data.win_goal);
-            }
-            
-            else
-            {
-                data.q_down.push(lev_decide(lParam,tab));
-                data.q_down.push(data.win_goal);
-            }
-            
-        }
-        if(buf==2)
+        if(buf>=0 && buf<6)
         {
-            std::cout << data.win_goal<<std::endl;
-            data.win_goal= p1-win_height;
-            std::cout << data.win_goal;
+            std::cout<<std::endl<<"buf: " <<buf;         
+            switch(buf)
+            {
+                case 1: data.win_goal= p0-win_height; std::cout<<std::endl<<"case 1: " <<buf; break;
+                case 2: data.win_goal= p1-win_height; std::cout<<std::endl<<"case 2: " <<buf; break;
+                case 3: data.win_goal= p2-win_height; std::cout<<std::endl<<"case 3: " <<buf; break;
+                case 4: data.win_goal= p3-win_height; std::cout<<std::endl<<"case 4: " <<buf; break;
+                case 5: data.win_goal= p4-win_height; std::cout<<std::endl<<"case 5: " <<buf; break;
+                default: data.win_goal= data.win_state; std::cout<<std::endl<<"default: " <<buf; break;
+                
+
+            }
+            std::cout<<std::endl<<"data.win_goal: " <<data.win_goal;
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                data.q_up.push(lev_decide(lParam,tab));
+                data.q_up.push(lev_decide(lParam,tab)-win_height);
                 data.q_up.push(data.win_goal);
             }
             
             else
             {
-                data.q_down.push(lev_decide(lParam,tab));
+                data.q_down.push(lev_decide(lParam,tab)-win_height);
                 data.q_down.push(data.win_goal);
-            }
-        }
-        if(buf==3) 
-        {
-            std::cout << data.win_goal<<std::endl;
-            data.win_goal= p2-win_height;
-            std::cout << data.win_goal<<std::endl;
-            std::cout << data.win_state;
-            going_up = dir_decide(lParam,data);
-            if(going_up)
-            {
-                data.q_up.push(lev_decide(lParam,tab));
-                data.q_up.push(data.win_goal);
             }
             
-            else
-            {
-                data.q_down.push(lev_decide(lParam,tab));
-                data.q_down.push(data.win_goal);
-            }
-        }
-        if(buf==4)
-        {
-            std::cout << data.win_goal<<std::endl;
-            data.win_goal= p3-win_height;
-            std::cout << data.win_goal;
-            going_up = dir_decide(lParam,data);
-            if(going_up)
-            {
-                data.q_up.push(lev_decide(lParam,tab));
-                data.q_up.push(data.win_goal);
-            }
-            
-            else
-            {
-                data.q_down.push(lev_decide(lParam,tab));
-                data.q_down.push(data.win_goal);
-            }
-        }
-        if(buf==5)
-        {
-            std::cout << data.win_goal<<std::endl;
-            data.win_goal= p4-win_height;
-            std::cout << data.win_goal;
-            going_up = dir_decide(lParam,data);
-            if(going_up)
-            {
-                data.q_up.push(lev_decide(lParam,tab));
-                data.q_up.push(data.win_goal);
-            }
-            
-            else
-            {
-                data.q_down.push(lev_decide(lParam,tab));
-                data.q_down.push(data.win_goal);
-            }
-        }
-        if(buf==0)
-        {
-         std::cout << data.win_goal<<std::endl;
-         data.win_goal= data.win_state;
-          std::cout << data.win_goal;
-            going_up = dir_decide(lParam,data);
-            if(going_up)
-            {
-                data.q_up.push(lev_decide(lParam,tab));
-                data.q_up.push(data.win_goal);
-            }
-            
-            else
-            {
-                data.q_down.push(lev_decide(lParam,tab));
-                data.q_down.push(data.win_goal);
-            }
         }
 
-        std::cout<<" "<<data.q_down.front();
+        
+        std::cout<<"if empty: "<<data.q_down.empty()<<" "<<data.q_up.empty()<<std::endl;
+        std::cout<<"q_down.front: "<<data.q_down.front()<<std::endl;
+        std::cout<<"q_up.front: "<<data.q_up.front()<<std::endl;
         drawrectL(hdc,weightp_x,weightp_y,win_weigth,font_value);
-        std::cout<<" "<<going_up;
+        std::cout<<"going_up "<<going_up<<std::endl;
 //przesuwanie windy
         if(buf == 7)
         { int i = 0;
-            //std::cout<<"test ";
+            std::cout<<"test ";
             //std::cout<<data.q_up.empty()<<" "<<data.q_down.empty();
             while(!(data.q_up.empty()&&data.q_down.empty()))
             {
@@ -449,13 +378,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                 if(data.q_up.empty()) going_up = false;
                 if(going_up && !data.q_up.empty())
                 {
-                    data.win_goal = data.q_up.front();                   
+                    data.win_goal = data.q_up.front();   
+                    std::cout<<std::endl<<"q_up.first(): "<<data.q_up.front();                
                     data.q_up.pop();
                 }
                 else if(!going_up && !data.q_down.empty())
                 {
                     data.win_goal = data.q_down.front();
-                    std::cout<<" test " ;
+                    std::cout<<std::endl<<"q_down.first(): "<<data.q_down.front();
                     data.q_down.pop();
                 }
                 //std::cout<<"test5 ";
