@@ -4,6 +4,7 @@
 #include <objidl.h>
 #include <string>
 #include <vector>
+#include <queue>
 
 using namespace Gdiplus;
 
@@ -37,8 +38,8 @@ class Button_Data{
         };
         int win_goal = 0;
         int win_state = 0;
-        std::vector<int> q_up; 
-        std::vector<int> q_down; 
+        std::queue<int> q_up; 
+        std::queue<int> q_down; 
 };
 
 void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
@@ -322,14 +323,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                data.q_up.push_back(lev_decide(lParam,tab));
-                data.q_up.push_back(data.win_goal);
+                data.q_up.push(lev_decide(lParam,tab));
+                data.q_up.push(data.win_goal);
             }
             
             else
             {
-                data.q_down.push_back(lev_decide(lParam,tab));
-                data.q_down.push_back(data.win_goal);
+                data.q_down.push(lev_decide(lParam,tab));
+                data.q_down.push(data.win_goal);
             }
             
         }
@@ -341,14 +342,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                data.q_up.push_back(lev_decide(lParam,tab));
-                data.q_up.push_back(data.win_goal);
+                data.q_up.push(lev_decide(lParam,tab));
+                data.q_up.push(data.win_goal);
             }
             
             else
             {
-                data.q_down.push_back(lev_decide(lParam,tab));
-                data.q_down.push_back(data.win_goal);
+                data.q_down.push(lev_decide(lParam,tab));
+                data.q_down.push(data.win_goal);
             }
         }
         if(buf==3) 
@@ -360,14 +361,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                data.q_up.push_back(lev_decide(lParam,tab));
-                data.q_up.push_back(data.win_goal);
+                data.q_up.push(lev_decide(lParam,tab));
+                data.q_up.push(data.win_goal);
             }
             
             else
             {
-                data.q_down.push_back(lev_decide(lParam,tab));
-                data.q_down.push_back(data.win_goal);
+                data.q_down.push(lev_decide(lParam,tab));
+                data.q_down.push(data.win_goal);
             }
         }
         if(buf==4)
@@ -378,14 +379,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                data.q_up.push_back(lev_decide(lParam,tab));
-                data.q_up.push_back(data.win_goal);
+                data.q_up.push(lev_decide(lParam,tab));
+                data.q_up.push(data.win_goal);
             }
             
             else
             {
-                data.q_down.push_back(lev_decide(lParam,tab));
-                data.q_down.push_back(data.win_goal);
+                data.q_down.push(lev_decide(lParam,tab));
+                data.q_down.push(data.win_goal);
             }
         }
         if(buf==5)
@@ -396,14 +397,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                data.q_up.push_back(lev_decide(lParam,tab));
-                data.q_up.push_back(data.win_goal);
+                data.q_up.push(lev_decide(lParam,tab));
+                data.q_up.push(data.win_goal);
             }
             
             else
             {
-                data.q_down.push_back(lev_decide(lParam,tab));
-                data.q_down.push_back(data.win_goal);
+                data.q_down.push(lev_decide(lParam,tab));
+                data.q_down.push(data.win_goal);
             }
         }
         if(buf==0)
@@ -414,14 +415,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                data.q_up.push_back(lev_decide(lParam,tab));
-                data.q_up.push_back(data.win_goal);
+                data.q_up.push(lev_decide(lParam,tab));
+                data.q_up.push(data.win_goal);
             }
             
             else
             {
-                data.q_down.push_back(lev_decide(lParam,tab));
-                data.q_down.push_back(data.win_goal);
+                data.q_down.push(lev_decide(lParam,tab));
+                data.q_down.push(data.win_goal);
             }
         }
 
@@ -431,26 +432,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 //przesuwanie windy
         if(buf == 7)
         { int i = 0;
-            std::cout<<"test";
-            std::cout<<data.q_up.empty()<<" "<<data.q_down.empty();
+            //std::cout<<"test ";
+            //std::cout<<data.q_up.empty()<<" "<<data.q_down.empty();
             while(!(data.q_up.empty()&&data.q_down.empty()))
             {
+                //std::cout<<"test2 ";
                 i++;
                 if(i==150) break;
 
-                std::cout<<!(data.q_up.empty()&&data.q_down.empty());
+               // for(int i = 0;i<data.q_down.size();i++)
+               // {
+               //     std::cout<<data.q_down.front()<<" ";
+               // }
+
+                std::cout<<" end " ;
                 if(data.q_up.empty()) going_up = false;
                 if(going_up && !data.q_up.empty())
                 {
-                    data.win_goal = !data.q_up.front();
-                    data.q_up.pop_back();
+                    data.win_goal = data.q_up.front();                   
+                    data.q_up.pop();
                 }
-                else if(!going_up && data.q_down.empty())
+                else if(!going_up && !data.q_down.empty())
                 {
                     data.win_goal = data.q_down.front();
-                    data.q_down.pop_back();
+                    std::cout<<" test " ;
+                    data.q_down.pop();
                 }
-
+                //std::cout<<"test5 ";
                 if(data.win_state<data.win_goal)
                 {
                     while(data.win_state<data.win_goal && data.win_state+win_height<wys-2*win_margin)
@@ -475,6 +483,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                         data.win_state = data.win_state-VELOCITY;
                     }
                 }
+                
             }
            
         }
