@@ -6,6 +6,9 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+#include <map>
+#include <array>
+#include <algorithm>
 
 using namespace Gdiplus;
 
@@ -23,6 +26,9 @@ const double Textbox_heigth_mult = 1.5;
 const int boxL_width = 100;
 const int boxL_Heigth = 60;
 const int LEVEL_COUNT = 5;
+const int MAX_WEIGHT = 300;
+const int P_WEIGHT = 70;
+const int state_error = 5;
 
 const int VELOCITY = 1;
 
@@ -43,6 +49,12 @@ class Button_Data{
         std::queue<unsigned int> q_down; 
         std::vector<unsigned int> v_up; 
         std::vector<unsigned int> v_down;
+        int p_count = 0;
+        int pID =0;
+        std::map<int, int> winID;
+        std::map<int, int> pickID;
+        std::array<int, MAX_WEIGHT/P_WEIGHT>winda;
+        int weight = 0;
 };
 
 void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
@@ -107,7 +119,7 @@ void drawrectL(HDC hdc,int x,int y,int number,int font_value)
 {
     
     Gdiplus::Graphics    graphics(hdc);
-    SolidBrush  brush(Gdiplus::Color(255,255,255,255));
+    SolidBrush  brush(Gdiplus::Color(0,255,255,255));
     SolidBrush  brush2(Gdiplus::Color(a,r,g,b));
     FontFamily  fontFamily(L"Comic Sans MS");
     Gdiplus::Font        font(&fontFamily, font_value, FontStyleRegular, UnitPixel);
@@ -343,14 +355,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
+                int passengerID = data.pID++;
                 data.v_up.push_back(lev_decide(lParam,tab)-win_height);
                 data.v_up.push_back(data.win_goal);
+                data.winID.insert(std::make_pair(data.win_goal,passengerID));
+                data.pickID.insert(std::make_pair(lev_decide(lParam,tab)-win_height,passengerID));
             }
             
             else
-            {
+            {   
+                int passengerID = data.pID++;
                 data.v_down.push_back(lev_decide(lParam,tab)-win_height);
                 data.v_down.push_back(data.win_goal);
+                data.winID.insert(std::make_pair(data.win_goal,passengerID));
+                data.pickID.insert(std::make_pair(lev_decide(lParam,tab)-win_height,passengerID));
             }
                        
         }
@@ -397,6 +415,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                 //std::cout<<"test2 ";
                 i++;
                 if(i==100) break;
+                std::cout<<std::endl<<"Weight "<<data.weight;
+                std::cout<<std::endl<<"p_count "<<data.p_count;
+                data.weight = data.p_count*P_WEIGHT;
+                drawrectL(hdc,weightp_x,weightp_y,data.weight,font_value);
+
+
+                if(data.win_state<data.win_goal+state_error && data.win_state>data.win_goal-state_error)
+                {
+                    if(data.pickID.count(data.win_goal) > 0)
+                    {std::cout<<"test2 ";
+                        for(int i = 0; i<data.winda.size();i++)
+                        {
+                            if(data.winda[i]==0)
+                            data.winda[i] = data.pickID[data.win_goal];
+                            data.p_count++;
+                            data.pickID.erase(data.win_goal);
+                            break;
+                        }
+                    }
+                    if(data.winID.count(data.win_goal) > 0)
+                    {std::cout<<"test3 ";
+                        for(int i = 0; i<data.winda.size();i++)
+                        {
+                            if(data.winID[data.win_goal]==data.winda[i])
+                            {
+                                data.winda[i] = 0;
+                                data.p_count--;
+                                data.winID.erase(data.win_goal);
+                            }
+                        }
+                    }
+                }
 
                
 
