@@ -357,38 +357,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 
         
         std::cout<<"if empty: "<<data.q_down.empty()<<" "<<data.q_up.empty()<<std::endl;
-        std::cout<<"q_down.front: "<<data.q_down.front()<<std::endl;
-        std::cout<<"q_up.front: "<<data.q_up.front()<<std::endl;
+
         drawrectL(hdc,weightp_x,weightp_y,win_weigth,font_value);
         std::cout<<"going_up "<<going_up<<std::endl;
 //przesuwanie windy
         if(buf == 7)
         { 
+                   
+            std::cout<<"start ";
             int size_up = data.v_up.size();
             int size_down = data.v_down.size();
 
             std::sort(data.v_up.begin(), data.v_up.end());
             auto unique_end = std::unique(data.v_up.begin(), data.v_up.end());
             data.v_up.erase(unique_end, data.v_up.end());
-            for (const auto& element : data.v_up) 
-            {
-                data.q_up.push(element);
+            std::cout<<std::endl<<"queue up: ";
+            for (int i = data.v_up.size()-1;i>=0;i--) 
+            {std::cout<<data.v_up[i]<<" ";
+                data.q_up.push(data.v_up[i]);
             }
             std::sort(data.v_down.begin(), data.v_down.end());
             auto unique_end2 = std::unique(data.v_down.begin(), data.v_down.end());
             data.v_down.erase(unique_end2, data.v_down.end());
+            std::cout<<std::endl<<"queue down: ";
             for (const auto& element : data.v_down) 
-            {
+            {std::cout<<element<<" ";
                 data.q_down.push(element);
             }
             data.v_down.clear();
             data.v_up.clear();
 
             int i = 0;
-            std::cout<<"test ";
+            
             //std::cout<<data.q_up.empty()<<" "<<data.q_down.empty();
             while(!(data.q_up.empty()&&data.q_down.empty()))
             {
+                std::cout<<std::endl<<"q_down.front: "<<data.q_down.front()<<std::endl;
+                 std::cout<<std::endl<<"q_up.front: "<<data.q_up.front()<<std::endl;
                 //std::cout<<"test2 ";
                 i++;
                 if(i==100) break;
@@ -396,16 +401,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                
 
                 if(data.q_up.empty()) going_up = false;
+                if(data.q_down.empty()) going_up = true;
                 if(going_up && !data.q_up.empty())
                 {
                     data.win_goal = data.q_up.front();   
-                    std::cout<<std::endl<<"q_up.first(): "<<data.q_up.front();                
+                    //std::cout<<std::endl<<"q_up.first(): "<<data.q_up.front();                
                     data.q_up.pop();
                 }
                 else if(!going_up && !data.q_down.empty())
                 {
                     data.win_goal = data.q_down.front();
-                    std::cout<<std::endl<<"q_down.first(): "<<data.q_down.front();
+                   // std::cout<<std::endl<<"q_down.first(): "<<data.q_down.front();
                     data.q_down.pop();
                 }
                 //std::cout<<"test5 ";
@@ -434,7 +440,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                     }
                 }
              
-                std::cout<<" end " ;                  
+                std::cout<<" end " <<std::endl;                  
             }
            
         }
