@@ -127,7 +127,6 @@ void drawrectL(HDC hdc,int x,int y,int number,int font_value)
     Gdiplus::Pen         pen(Gdiplus::Color(a,r,g,b));
     
 
-    
     std::wstring numberString = std::to_wstring(number);
     const wchar_t* text = numberString.c_str();
     
@@ -135,7 +134,6 @@ void drawrectL(HDC hdc,int x,int y,int number,int font_value)
     graphics.DrawString(text, -1, &font, pointF, &brush2);
     graphics.DrawRectangle(&pen,x,y,boxL_width,boxL_Heigth);  
    
-    
 }
 Button_Data draw_panel(Button_Data dt,HDC hdc,int font_value,int x,int y,const WCHAR* text1,const WCHAR* text2,const WCHAR* text3,const WCHAR* text4,int ID1, int ID2, int ID3, int ID4)
 {
@@ -193,10 +191,6 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
    ShowWindow(hWnd, iCmdShow);
    UpdateWindow(hWnd);
 
-    
-
-
-
    while(GetMessage(&msg, NULL, 0, 0))
    {
       TranslateMessage(&msg);
@@ -208,7 +202,6 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
 }
 int check_coords(LPARAM lParam, Button_Data dt)
 {
-    
     int x = LOWORD(lParam);
     int y = HIWORD(lParam);
     for(int i = 0; i<BUTTON_COUNT; ++i)
@@ -248,9 +241,7 @@ int lev_decide(LPARAM lParam,const float tab[])
             std::cout<<std::endl<<"lev_decide output: "<<tab[i+1]<<std::endl;
             return tab[i+1];
         }
-        
     }
-    
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, 
@@ -267,21 +258,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     if (GetWindowRect(hWnd, &rect))
     {
        w = rect.right - rect.left;
-       h = rect.bottom - rect.top;   
-         
+       h = rect.bottom - rect.top;
     }
-    int wys=h-30; // do usunięcia po poprawieniu równania na h
-    const float p0 =wys/5+2*wys/3;
-    const float p1 =2*h/3;
-    const float p2 =wys/5+wys/3;
-    const float p3 =h/3;
-    const float p4 =wys/5;
-    const float tab[LEVEL_COUNT+1] ={0,p4,p3,p2,p1,p0};
+    float p[LEVEL_COUNT];
+    wchar_t L[LEVEL_COUNT][4];
+    float tab[LEVEL_COUNT+1];
+    tab[0]=0;
+    for(int i=1; i<LEVEL_COUNT; i++)
+    {
+        tab[i]=p[LEVEL_COUNT-i];
+    }
     const int font_value=24;
     const int weightp_x = w-30-boxL_width;
     const int weightp_y = 30;
-
-    
+    for (int i = 0; i<LEVEL_COUNT; i++) p[i]=0.8*h*(LEVEL_COUNT-i-1)/LEVEL_COUNT+0.2*h;
+    for(int i = 0; i<LEVEL_COUNT; i++)  swprintf(L[i],4,L"%d",i+1);
 
     int buf = 0;
     int win_weigth = 0;
@@ -291,26 +282,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     case WM_PAINT: // pierwsze pomalowanie (inicjalizujące)
       
       hdc = BeginPaint(hWnd, &ps);
-      data.win_state = p0-win_height;
+      data.win_state = p[0]-win_height;
+
         drawrect(hdc,w/2-win_width/2,data.win_state,win_width,win_height); // winda
-        drawrect(hdc,w/2-win_width/2-win_margin,4*win_margin,win_width+2*win_margin,wys-5*win_margin); // szyb windy
+        drawrect(hdc,w/2-win_width/2-win_margin,0.02*h,win_width+2*win_margin,0.92*h); // szyb windy
 
-        drawline(hdc,0,p0,w/2-win_width/2-win_margin,p0,5);                         // 0 piętro (parter)
-        data = draw_panel(data,hdc,font_value,w/40,p0-2*font_value*Vertical_panel_dispersion,L"1",L"2",L"3",L"4",2,3,4,5);
+        for(int i=0;i<LEVEL_COUNT;i++)
+        {
+            if(i%2==0) {
+                drawline(hdc,0,p[i],w/2-win_width/2-win_margin,p[i],5);
+                //draw_panel
+            } 
+            if(i%2==1) {
+                drawline(hdc,rect.right,p[i],w/2+win_width/2+win_margin,p[i],5); 
+                //draw_panel
+            } 
+        }                    
+        
+        data = draw_panel(data,hdc,font_value,w/40,p[0]-2*font_value*Vertical_panel_dispersion,L[1],L[2],L[3],L[4],2,3,4,5); // 0 piętro (parter)
+        data = draw_panel(data,hdc,font_value,75*w/80,p[1]-2*font_value*Vertical_panel_dispersion,L"0",L"2",L"3",L"4",1,3,4,5); // 1 piętro
+        data = draw_panel(data,hdc,font_value,w/40,p[2]-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"3",L"4",1,2,4,5);  // 2 piętro
+        data = draw_panel(data,hdc,font_value,75*w/80,p[3]-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"4",1,2,3,5); // 3 piętro
+        data = draw_panel(data,hdc,font_value,w/40,p[4]-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"3",1,2,3,4); // 4 piętro
 
-        drawline(hdc,rect.right,p1,w/2+win_width/2+win_margin,p1,5);                // 1 piętro
-        data = draw_panel(data,hdc,font_value,75*w/80,p1-2*font_value*Vertical_panel_dispersion,L"0",L"2",L"3",L"4",1,3,4,5);
-
-        drawline(hdc,0,p2,w/2-win_width/2-win_margin,p2,5);                         // 2 piętro
-        data = draw_panel(data,hdc,font_value,w/40,p2-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"3",L"4",1,2,4,5);
-
-        drawline(hdc,rect.right,p3,w/2+win_width/2+win_margin,p3,5);                // 3 piętro
-        data = draw_panel(data,hdc,font_value,75*w/80,p3-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"4",1,2,3,5);
-
-        drawline(hdc,0,p4,w/2-win_width/2-win_margin,p4,5);                         // 4 piętro
-        data = draw_panel(data,hdc,font_value,w/40,p4-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"3",1,2,3,4);
-
-        drawrectL(hdc,weightp_x,weightp_y,0,font_value);
+        //drawrectL(hdc,weightp_x,weightp_y,0,font_value);
         data = drawrectT(hdc,weightp_x-200,weightp_y,L"Start",font_value,7,data);
 
    //  std::cout<<std::endl;
@@ -342,11 +337,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             std::cout<<std::endl<<"buf: " <<buf;         
             switch(buf)
             {
-                case 1: data.win_goal= p0-win_height; std::cout<<std::endl<<"case 1: " <<buf; break;
-                case 2: data.win_goal= p1-win_height; std::cout<<std::endl<<"case 2: " <<buf; break;
-                case 3: data.win_goal= p2-win_height; std::cout<<std::endl<<"case 3: " <<buf; break;
-                case 4: data.win_goal= p3-win_height; std::cout<<std::endl<<"case 4: " <<buf; break;
-                case 5: data.win_goal= p4-win_height; std::cout<<std::endl<<"case 5: " <<buf; break;
+                case 1: data.win_goal= p[0]-win_height; std::cout<<std::endl<<"case 1: " <<buf; break;
+                case 2: data.win_goal= p[1]-win_height; std::cout<<std::endl<<"case 2: " <<buf; break;
+                case 3: data.win_goal= p[2]-win_height; std::cout<<std::endl<<"case 3: " <<buf; break;
+                case 4: data.win_goal= p[3]-win_height; std::cout<<std::endl<<"case 4: " <<buf; break;
+                case 5: data.win_goal= p[4]-win_height; std::cout<<std::endl<<"case 5: " <<buf; break;
                 default: data.win_goal= data.win_state; std::cout<<std::endl<<"default: " <<buf; break;
                 
 
@@ -467,7 +462,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                 //std::cout<<"test5 ";
                 if(data.win_state<data.win_goal)
                 {
-                    while(data.win_state<data.win_goal && data.win_state+win_height<wys-2*win_margin)
+                    while(data.win_state<data.win_goal && data.win_state+win_height<0.92*h)
                     {              
                         hdc = GetDC(hWnd);
                         clearrect(hdc,w/2-win_width/2,data.win_state,win_width,win_height);  
@@ -479,7 +474,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                 if(data.win_state>data.win_goal)
                 {
                     
-                    while(data.win_state>data.win_goal && data.win_state>2*win_margin)//
+                    while(data.win_state>data.win_goal && data.win_state>0.04*h)
                     {
                             
                         hdc = GetDC(hWnd);

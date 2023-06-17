@@ -49,6 +49,9 @@
         "algorithm": "cpp",
         "deque": "cpp",
         "queue": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "optional": "cpp",
+        "ranges": "cpp",
+        "span": "cpp"
     }
 }
