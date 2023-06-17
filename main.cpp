@@ -135,15 +135,27 @@ void drawrectL(HDC hdc,int x,int y,int number,int font_value)
     graphics.DrawRectangle(&pen,x,y,boxL_width,boxL_Heigth);  
    
 }
-Button_Data draw_panel(Button_Data dt,HDC hdc,int font_value,int x,int y,const WCHAR* text1,const WCHAR* text2,const WCHAR* text3,const WCHAR* text4,int ID1, int ID2, int ID3, int ID4)
+Button_Data draw_panel(Button_Data dt,HDC hdc,int font_value,int x,int y,int level)
 {
-    size_t length1 = wcslen(text1);
-    size_t length3 = wcslen(text3);
+    wchar_t L[LEVEL_COUNT][4];
+    float length1 = 0, length2 = 0;
+    for(int i = 0; i<LEVEL_COUNT; i++)  swprintf(L[i],4,L"%d",i);
 
-    dt = drawrectT(hdc,x,y,text1,font_value,ID1,dt);
-    dt = drawrectT(hdc,x+length1*font_value*Horizontal_panel_dispersion,y,text2,font_value,ID2,dt);
-    dt = drawrectT(hdc,x,y+font_value*Vertical_panel_dispersion,text3,font_value,ID3,dt);
-    dt = drawrectT(hdc,x+length3*font_value*Horizontal_panel_dispersion,y+font_value*Vertical_panel_dispersion,text4,font_value,ID4,dt);
+    for(int i = 0; i<LEVEL_COUNT; i++)
+    {
+        if(i%2==0) {
+            if(i!=level) dt = drawrectT(hdc,x+(i/2)*length1*font_value*Horizontal_panel_dispersion,y,L[i],font_value,i,dt);
+            length1=wcslen(L[i]);
+            if(wcslen(L[i])>1)length1=wcslen(L[i])/1.75;
+        } 
+        if(i%2==1) {
+            if(i!=level) dt = drawrectT(hdc,x+(i/2)*length2*font_value*Horizontal_panel_dispersion,y+font_value*Vertical_panel_dispersion,L[i],font_value,i,dt);
+            length2=wcslen(L[i]);
+            if(wcslen(L[i])>1)length2=wcslen(L[i])/1.75;
+        } 
+        
+    }
+    
     return dt;
 }
 
@@ -261,7 +273,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
        h = rect.bottom - rect.top;
     }
     float p[LEVEL_COUNT];
-    wchar_t L[LEVEL_COUNT][4];
+
     float tab[LEVEL_COUNT+1];
     tab[0]=0;
     for(int i=1; i<LEVEL_COUNT; i++)
@@ -272,7 +284,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     const int weightp_x = w-30-boxL_width;
     const int weightp_y = 30;
     for (int i = 0; i<LEVEL_COUNT; i++) p[i]=0.8*h*(LEVEL_COUNT-i-1)/LEVEL_COUNT+0.2*h;
-    for(int i = 0; i<LEVEL_COUNT; i++)  swprintf(L[i],4,L"%d",i+1);
 
     int buf = 0;
     int win_weigth = 0;
@@ -291,19 +302,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         {
             if(i%2==0) {
                 drawline(hdc,0,p[i],w/2-win_width/2-win_margin,p[i],5);
-                //draw_panel
+                data = draw_panel(data,hdc,font_value,w/40,p[i]-2*font_value*Vertical_panel_dispersion,i);
             } 
             if(i%2==1) {
                 drawline(hdc,rect.right,p[i],w/2+win_width/2+win_margin,p[i],5); 
-                //draw_panel
+                data = draw_panel(data,hdc,font_value,0.95*w-LEVEL_COUNT*font_value*Horizontal_panel_dispersion/1.7,p[i]-2*font_value*Vertical_panel_dispersion,i);
             } 
-        }                    
-        
-        data = draw_panel(data,hdc,font_value,w/40,p[0]-2*font_value*Vertical_panel_dispersion,L[1],L[2],L[3],L[4],2,3,4,5); // 0 piętro (parter)
-        data = draw_panel(data,hdc,font_value,75*w/80,p[1]-2*font_value*Vertical_panel_dispersion,L"0",L"2",L"3",L"4",1,3,4,5); // 1 piętro
-        data = draw_panel(data,hdc,font_value,w/40,p[2]-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"3",L"4",1,2,4,5);  // 2 piętro
-        data = draw_panel(data,hdc,font_value,75*w/80,p[3]-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"4",1,2,3,5); // 3 piętro
-        data = draw_panel(data,hdc,font_value,w/40,p[4]-2*font_value*Vertical_panel_dispersion,L"0",L"1",L"2",L"3",1,2,3,4); // 4 piętro
+        }
 
         //drawrectL(hdc,weightp_x,weightp_y,0,font_value);
         data = drawrectT(hdc,weightp_x-200,weightp_y,L"Start",font_value,7,data);
