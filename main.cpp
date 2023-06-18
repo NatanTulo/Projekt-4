@@ -16,19 +16,20 @@ const int a = 255;
 const int r = 0;
 const int g = 20;
 const int b = 255;
-const int win_width =200; // szerokość i wysokość windy
-const int win_height = 120;
-const int win_margin = 5;
-const int BUTTON_COUNT = 30;
+const unsigned int win_width =200; // szerokość i wysokość windy
+const unsigned int win_height = 120;
+const unsigned int win_margin = 5;
+const unsigned int BUTTON_COUNT = 30;
 const float Horizontal_panel_dispersion = 1.2;
 const float Vertical_panel_dispersion = 2;
 const double Textbox_heigth_mult = 1.5;
-const int boxL_width = 100;
-const int boxL_Heigth = 60;
-const int LEVEL_COUNT = 5;
-const int MAX_WEIGHT = 300;
-const int P_WEIGHT = 70;
+const unsigned int boxL_width = 100;
+const unsigned int boxL_Heigth = 60;
+const unsigned int LEVEL_COUNT = 5;
+const unsigned int MAX_WEIGHT = 300;
+const unsigned int P_WEIGHT = 70;
 const int state_error = 5;
+const unsigned int win_pick_SIZE = 10;
 
 const int VELOCITY = 1;
 
@@ -43,19 +44,31 @@ class Button_Data{
             {},
             {},
         };
-        int win_goal = 0;
-        int win_state = 0;
+        unsigned int win_goal = 0;
+        unsigned int win_state = 0;
         std::queue<unsigned int> q_up; 
         std::queue<unsigned int> q_down; 
         std::vector<unsigned int> v_up; 
         std::vector<unsigned int> v_down;
-        int p_count = 0;
+        unsigned int p_count = 0;
         int pID =0;
-        std::map<int, int> winID;
-        std::map<int, int> pickID;
-        std::array<int, MAX_WEIGHT/P_WEIGHT>winda;
-        int weight = 0;
+        
+        std::vector<std::vector<unsigned int>> dropID;
+        std::vector<std::vector<unsigned int>> pickID;
+        
+                
+        std::array<unsigned int, MAX_WEIGHT/P_WEIGHT>winda;
+        unsigned int weight = 0;
+      Button_Data(){
+        for(int i =0; i<MAX_WEIGHT/P_WEIGHT;i++)
+        {
+            winda[i] =0;
+        }
+      }
+        
+        
 };
+    
 
 void drawrect(HDC hdc,int Rx, int Ry,int w, int h)
 {
@@ -119,10 +132,10 @@ void drawrectL(HDC hdc,int x,int y,int number,int font_value)
 {
     
     Gdiplus::Graphics    graphics(hdc);
-    SolidBrush  brush(Gdiplus::Color(0,255,255,255));
-    SolidBrush  brush2(Gdiplus::Color(a,r,g,b));
+    Gdiplus::SolidBrush  brush(Gdiplus::Color(255,255,255,255));
+    Gdiplus::SolidBrush  brush2(Gdiplus::Color(a,r,g,b));
     FontFamily  fontFamily(L"Comic Sans MS");
-    Gdiplus::Font        font(&fontFamily, font_value, FontStyleRegular, UnitPixel);
+    Gdiplus::Font        font(&fontFamily, font_value, Gdiplus::FontStyleRegular, UnitPixel);
     PointF      pointF(x,y);
     Gdiplus::Pen         pen(Gdiplus::Color(a,r,g,b));
     
@@ -244,13 +257,13 @@ bool dir_decide(LPARAM lParam, Button_Data data)
 }
 int lev_decide(LPARAM lParam,const float tab[])
 {
-    std::cout<<std::endl<<"Mouse Y for lev_decide: "<<HIWORD(lParam)<<std::endl;
+   // std::cout<<std::endl<<"Mouse Y for lev_decide: "<<HIWORD(lParam)<<std::endl;
     for(int i = 0; i<LEVEL_COUNT;i++)
     {
-        std::cout<<std::endl<<"lev_decide process: "<<tab[i]<<" "<<tab[i+1]<<std::endl;
+        //std::cout<<std::endl<<"lev_decide process: "<<tab[i]<<" "<<tab[i+1]<<std::endl;
         if(HIWORD(lParam)>=tab[i] && HIWORD(lParam)<tab[i+1])
         {
-            std::cout<<std::endl<<"lev_decide output: "<<tab[i+1]<<std::endl;
+            //std::cout<<std::endl<<"lev_decide output: "<<tab[i+1]<<std::endl;
             return tab[i+1];
         }
     }
@@ -310,7 +323,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             } 
         }
 
-        //drawrectL(hdc,weightp_x,weightp_y,0,font_value);
+        drawrectL(hdc,weightp_x,weightp_y,0,font_value);
         data = drawrectT(hdc,weightp_x-200,weightp_y,L"Start",font_value,7,data);
 
    //  std::cout<<std::endl;
@@ -330,51 +343,53 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         buf = check_coords(lParam,data); // reakcja guzika, buf jest zmienną która daje ID wciśniętego guzika
          
          //debugging macierzy guzików
-       // std::cout<<std::endl;
-       // for(int i = 0; i<BUTTON_COUNT;i++)
-       // {
-       //  std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
-       // }
-       // std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
+        std::cout<<std::endl;
+        for(int i = 0; i<BUTTON_COUNT;i++)
+        {
+         std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
+        }
+        std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
         
         if(buf>=0 && buf<6)
         {
             std::cout<<std::endl<<"buf: " <<buf;         
-            switch(buf)
+            switch(buf+1)
             {
-                case 1: data.win_goal= p[0]-win_height; std::cout<<std::endl<<"case 1: " <<buf; break;
-                case 2: data.win_goal= p[1]-win_height; std::cout<<std::endl<<"case 2: " <<buf; break;
-                case 3: data.win_goal= p[2]-win_height; std::cout<<std::endl<<"case 3: " <<buf; break;
-                case 4: data.win_goal= p[3]-win_height; std::cout<<std::endl<<"case 4: " <<buf; break;
-                case 5: data.win_goal= p[4]-win_height; std::cout<<std::endl<<"case 5: " <<buf; break;
-                default: data.win_goal= data.win_state; std::cout<<std::endl<<"default: " <<buf; break;
+                case 1: data.win_goal= p[0]-win_height; std::cout<<std::endl<<"case 1: " <<data.win_goal; break;
+                case 2: data.win_goal= p[1]-win_height; std::cout<<std::endl<<"case 2: " <<data.win_goal; break;
+                case 3: data.win_goal= p[2]-win_height; std::cout<<std::endl<<"case 3: " <<data.win_goal; break;
+                case 4: data.win_goal= p[3]-win_height; std::cout<<std::endl<<"case 4: " <<data.win_goal; break;
+                case 5: data.win_goal= p[4]-win_height; std::cout<<std::endl<<"case 5: " <<data.win_goal; break;
+                default: data.win_goal= data.win_state; std::cout<<std::endl<<"default: " <<data.win_goal; break;
                 
 
             }
-            std::cout<<std::endl<<"data.win_goal: " <<data.win_goal;
+            std::cout<<std::endl<<"data.win_goal: " <<data.win_goal<<std::endl;
             going_up = dir_decide(lParam,data);
             if(going_up)
             {
-                int passengerID = data.pID++;
+                unsigned int passengerID = ++data.pID;
                 data.v_up.push_back(lev_decide(lParam,tab)-win_height);
                 data.v_up.push_back(data.win_goal);
-                data.winID.insert(std::make_pair(data.win_goal,passengerID));
-                data.pickID.insert(std::make_pair(lev_decide(lParam,tab)-win_height,passengerID));
+                data.dropID.push_back({data.win_goal,passengerID});          
+                data.pickID.push_back({lev_decide(lParam,tab)-win_height,passengerID});
+                std::cout<<"insert: "<<data.win_goal<<" "<<passengerID<<std::endl;
             }
             
             else
             {   
-                int passengerID = data.pID++;
+                unsigned int passengerID = ++data.pID;
                 data.v_down.push_back(lev_decide(lParam,tab)-win_height);
                 data.v_down.push_back(data.win_goal);
-                data.winID.insert(std::make_pair(data.win_goal,passengerID));
-                data.pickID.insert(std::make_pair(lev_decide(lParam,tab)-win_height,passengerID));
+                data.dropID.push_back({data.win_goal,passengerID});          
+                data.pickID.push_back({lev_decide(lParam,tab)-win_height,passengerID});
+                std::cout<<"insert: "<<data.win_goal<<" "<<passengerID<<std::endl;
             }
                        
         }
 
         
-        std::cout<<"if empty: "<<data.q_down.empty()<<" "<<data.q_up.empty()<<std::endl;
+        std::cout<<"if vectors empty: "<<data.v_down.empty()<<" "<<data.v_up.empty()<<std::endl;
 
         drawrectL(hdc,weightp_x,weightp_y,win_weigth,font_value);
         std::cout<<"going_up "<<going_up<<std::endl;
@@ -382,7 +397,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         if(buf == 7)
         { 
                    
-            std::cout<<"start ";
+            std::cout<< std::endl<<"------------start---------- "<< std::endl;
             int size_up = data.v_up.size();
             int size_down = data.v_down.size();
 
@@ -406,49 +421,71 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             data.v_up.clear();
 
             int i = 0;
-            
+            std::cout<< std::endl<<"------------init---------- "<< std::endl;
             //std::cout<<data.q_up.empty()<<" "<<data.q_down.empty();
             while(!(data.q_up.empty()&&data.q_down.empty()))
             {
-                std::cout<<std::endl<<"q_down.front: "<<data.q_down.front()<<std::endl;
-                 std::cout<<std::endl<<"q_up.front: "<<data.q_up.front()<<std::endl;
+               // std::cout<<std::endl<<"q_down.front: "<<data.q_down.front()<<std::endl;
+                 //std::cout<<std::endl<<"q_up.front: "<<data.q_up.front()<<std::endl;
                 //std::cout<<"test2 ";
                 i++;
                 if(i==100) break;
-                std::cout<<std::endl<<"Weight "<<data.weight;
-                std::cout<<std::endl<<"p_count "<<data.p_count;
-                data.weight = data.p_count*P_WEIGHT;
-                drawrectL(hdc,weightp_x,weightp_y,data.weight,font_value);
+                
+                
+                
 
 
-                if(data.win_state<data.win_goal+state_error && data.win_state>data.win_goal-state_error)
+                if(data.win_state==data.win_goal)
                 {
-                    if(data.pickID.count(data.win_goal) > 0)
-                    {std::cout<<"test2 ";
+                    for (const auto& pair : data.pickID) {std::cout << "KeyP: " << pair[0] << ", ValueP: " << pair[1] << std::endl;}
+                    if(!data.pickID.empty())
+                    {//std::cout<<"pas_ID "<<data.pickID.count(data.win_goal)<<std::endl;
                         for(int i = 0; i<data.winda.size();i++)
                         {
-                            if(data.winda[i]==0)
-                            data.winda[i] = data.pickID[data.win_goal];
-                            data.p_count++;
-                            data.pickID.erase(data.win_goal);
-                            break;
+                           // bool brake_bool = false;
+                            for(int j = 0; j<data.pickID.size();j++)
+                            {
+                                if(data.winda[i]==0 && data.win_state==data.pickID[j][0])
+                                {
+                                    data.winda[i] = data.pickID[j][1];
+                                    std::cout<<"+1 "<<std::endl;
+                                    data.p_count++;
+                                    data.pickID.erase(data.pickID.begin()+j);
+                                    //brake_bool = true;
+                                    //break;
+                                }
+                                
+                            }
+                            //if(brake_bool) break;    
                         }
                     }
-                    if(data.winID.count(data.win_goal) > 0)
-                    {std::cout<<"test3 ";
+                    
+                    for (const auto& pair : data.dropID) {std::cout << "KeyD: " << pair[0] << ", ValueD: " << pair[1] << std::endl;}
+
+                    if(!data.dropID.empty())                  
+                    {                   
                         for(int i = 0; i<data.winda.size();i++)
                         {
-                            if(data.winID[data.win_goal]==data.winda[i])
+                            //bool brake_bool = false;
+                            for(int j = 0; j<data.dropID.size();j++)
                             {
+                                if(data.winda[i]==data.dropID[j][1] && data.win_state==data.dropID[j][0])
+                                {
                                 data.winda[i] = 0;
+                                std::cout<<"-1 "<<std::endl;
                                 data.p_count--;
-                                data.winID.erase(data.win_goal);
-                            }
+                                data.dropID.erase(data.dropID.begin()+j);
+                                }                              
+                            }                            
+                            //if(brake_bool) break;   
                         }
                     }
                 }
-
-               
+                
+                std::cout<<std::endl<<"p_count "<<data.p_count<< std::endl;
+                data.weight = data.p_count*P_WEIGHT;
+                std::cout<<std::endl<<"Weight "<<data.weight<< std::endl;
+                drawrectL(hdc,weightp_x,weightp_y,data.weight,font_value);
 
                 if(data.q_up.empty()) going_up = false;
                 if(data.q_down.empty()) going_up = true;
@@ -467,6 +504,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                 //std::cout<<"test5 ";
                 if(data.win_state<data.win_goal)
                 {
+                    std::cout<<"Moving down"<<std::endl;
                     while(data.win_state<data.win_goal && data.win_state+win_height<0.92*h)
                     {              
                         hdc = GetDC(hWnd);
@@ -478,7 +516,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                 }
                 if(data.win_state>data.win_goal)
                 {
-                    
+                    std::cout<<"Moving up"<<std::endl;                   
                     while(data.win_state>data.win_goal && data.win_state>0.04*h)
                     {
                             
@@ -489,8 +527,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                         data.win_state = data.win_state-VELOCITY;
                     }
                 }
+
+                    if(!data.dropID.empty())                  
+                    {                   
+                        for(int i = 0; i<data.winda.size();i++)
+                        {
+                            //bool brake_bool = false;
+                            for(int j = 0; j<data.dropID.size();j++)
+                            {
+                                if(data.winda[i]==data.dropID[j][1] && data.win_state==data.dropID[j][0])
+                                {
+                                data.winda[i] = 0;
+                                std::cout<<"-1 "<<std::endl;
+                                data.p_count--;
+                                data.dropID.erase(data.dropID.begin()+j);
+                                }                              
+                            }                            
+                            //if(brake_bool) break;   
+                        }
+                    }
+                    std::cout<<std::endl<<"p_count "<<data.p_count<< std::endl;
+                    data.weight = data.p_count*P_WEIGHT;
+                    std::cout<<std::endl<<"Weight "<<data.weight<< std::endl;
+                    drawrectL(hdc,weightp_x,weightp_y,data.weight,font_value);
              
-                std::cout<<" end " <<std::endl;                  
+                std::cout<< std::endl<<" ------end------ pos: " << data.win_state<<std::endl;                  
             }
            
         }
