@@ -10,6 +10,8 @@
 #include <array>
 #include <algorithm>
 
+#define MY_TIMER_ID 1
+
 using namespace Gdiplus;
 
 const int a = 255;
@@ -30,7 +32,7 @@ const unsigned int MAX_WEIGHT = 300;
 const unsigned int P_WEIGHT = 70;
 const int state_error = 5;
 const unsigned int win_pick_SIZE = 10;
-
+const unsigned int seconds = 5;
 const int VELOCITY = 1;
 
 
@@ -567,11 +569,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             }
            
         }
+        SetTimer(hWnd, MY_TIMER_ID, seconds*1000, nullptr);
+        
         
         ReleaseDC(hWnd, hdc);
 //przesuwanie windy
         return 0;
-    
+    case WM_TIMER:
+
+                if(data.win_state<p[0]-win_height)
+                {
+                    std::cout<<"Moving down"<<std::endl;
+                    while(data.win_state<p[0]-win_height && data.win_state+win_height<0.92*h)
+                    {              
+                        hdc = GetDC(hWnd);
+                        clearrect(hdc,w/2-win_width/2,data.win_state,win_width,win_height);  
+                        drawrect(hdc,w/2-win_width/2,data.win_state+VELOCITY,win_width,win_height);           
+                        ReleaseDC(hWnd, hdc);
+                        data.win_state = data.win_state+VELOCITY;
+                    }
+                    std::cout<<"Moved to bottom floor "<<std::endl;
+                }
+    KillTimer(hWnd, MY_TIMER_ID);
+    return 0;
     
         
    default:
