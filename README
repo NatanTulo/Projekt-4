@@ -1,13 +1,8 @@
-do skompilowania potrzeba wpisać "g++ main.cpp -o Winda -lgdiplus -lgdi32" w terminalu
-funkcja INT WINAPI WinMain(91) służy jako main dla programu, ona wywołuje okienko
-buttons(16) jest to tablica do przechowywania koordynatów i wielkości guzików. Jest globalna, bo korzysta się w wielu funkcjach
-funkcja check_coords(145) bierze pozycję myszki i sprawdza czy jest ona na jakimś guziku, jeżeli jest, to zwraca ID guzika (gdzie ID guzika to po prostu miejsce guzika w tablicy)
-funkcja LRESULT CALLBACK WndProc(164) służy do odpowiadania na bodźce zewnętrze, takie jak klikanie w klawiaturę/myszkę
-funkcja drawrectT(59) rysuje prostokąt z tekstem w środku, który jest typu WCHAR https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-drawing-text-use?source=recommendations
-Komentarze w clearrect przypisują się również do drawrect, bo to są w zasadzie te same funkcje, z różnicą że clear robi biały prostokąt. coś na zasadzie gumki
-rzeczy takie jak WM_PAINT, WM_LBUTTONDOWN są to tak zwane "message", czyli wiadomości dla programu z systemu https://learn.microsoft.com/en-us/windows/win32/winmsg/using-messages-and-message-queues
-
-TODO
-hitboxy przycisków się nie zgadzają
-wyrównać linie - po lewej jest 8 px więcej
-poprawić wysokość okna
+Do skompilowania należy wpisać "g++ main.cpp -o Winda -lgdiplus -lgdi32" w terminalu
+Klasa Button_Data(40) to zbiór danych o przyciskach oraz windzie
+Funkcje drawrect(72), clearrect(91), drawrectT(100), drawrectL(129) rysują prostokąt odpowiednio: bez tekstu w środku, biały (na zasadzie gumki), z tekstem w środku oraz z liczbą w środku. Funkcje te są typu WCHAR https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-drawing-text-use?source=recommendations
+Funkcja draw_panel(149) tworzy zestaw przycisków przy pomocy drawrectT, które są wywoływane na każdym piętrze
+Funkcja INT WINAPI WinMain(175) służy jako main dla programu, ona wywołuje okienko
+Funkcja check_coords(225) bierze pozycję myszki i sprawdza czy jest ona na jakimś guziku, jeżeli jest, to zwraca ID guzika (gdzie ID guzika to po prostu miejsce guzika w tablicy)
+Funkcja LRESULT CALLBACK WndProc(267) służy do odpowiadania na bodźce zewnętrze, takie jak klikanie w klawiaturę/myszkę
+Warunki w switchu takie jak WM_PAINT, WM_LBUTTONDOWN są to tak zwane "message", czyli wiadomości dla programu z systemu https://learn.microsoft.com/en-us/windows/win32/winmsg/using-messages-and-message-queues
