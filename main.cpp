@@ -23,7 +23,7 @@ const unsigned int BUTTON_COUNT = 30;
 const float Horizontal_panel_dispersion = 1.2;
 const float Vertical_panel_dispersion = 2;
 const double Textbox_heigth_mult = 1.5;
-const unsigned int boxL_width = 100;
+const unsigned int boxL_width = 60;
 const unsigned int boxL_Heigth = 60;
 const unsigned int LEVEL_COUNT = 5;
 const unsigned int MAX_WEIGHT = 300;
@@ -257,16 +257,17 @@ bool dir_decide(LPARAM lParam, Button_Data data)
 }
 int lev_decide(LPARAM lParam,const float tab[])
 {
-   // std::cout<<std::endl<<"Mouse Y for lev_decide: "<<HIWORD(lParam)<<std::endl;
+    std::cout<<std::endl<<"Mouse Y for lev_decide: "<<HIWORD(lParam)<<std::endl;
     for(int i = 0; i<LEVEL_COUNT;i++)
     {
-        //std::cout<<std::endl<<"lev_decide process: "<<tab[i]<<" "<<tab[i+1]<<std::endl;
+        std::cout<<std::endl<<"lev_decide process: "<<tab[i]<<" "<<tab[i+1]<<std::endl;
         if(HIWORD(lParam)>=tab[i] && HIWORD(lParam)<tab[i+1])
         {
-            //std::cout<<std::endl<<"lev_decide output: "<<tab[i+1]<<std::endl;
+            std::cout<<std::endl<<"lev_decide output: "<<tab[i+1]<<std::endl;
             return tab[i+1];
         }
     }
+    return 0;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, 
@@ -285,11 +286,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
        w = rect.right - rect.left;
        h = rect.bottom - rect.top;
     }
-    float p[LEVEL_COUNT];
+    int p[LEVEL_COUNT];
 
     float tab[LEVEL_COUNT+1];
     tab[0]=0;
-    for(int i=1; i<LEVEL_COUNT; i++)
+    for(int i=1; i<=LEVEL_COUNT; i++)
     {
         tab[i]=p[LEVEL_COUNT-i];
     }
@@ -352,14 +353,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         
         if(buf>=0 && buf<6)
         {
-            std::cout<<std::endl<<"buf: " <<buf;         
+            std::cout<<std::endl<<"buf: " <<buf;
+            int x_rectL;
+            for(int i=0;i<LEVEL_COUNT;i++)
+            if (lev_decide(lParam,tab)==p[i]){if(i%2==0) x_rectL=150; else x_rectL=0.88*w-LEVEL_COUNT*font_value*Horizontal_panel_dispersion/1.7;}  
+
             switch(buf+1)
             {
-                case 1: data.win_goal= p[0]-win_height; std::cout<<std::endl<<"case 1: " <<data.win_goal; break;
-                case 2: data.win_goal= p[1]-win_height; std::cout<<std::endl<<"case 2: " <<data.win_goal; break;
-                case 3: data.win_goal= p[2]-win_height; std::cout<<std::endl<<"case 3: " <<data.win_goal; break;
-                case 4: data.win_goal= p[3]-win_height; std::cout<<std::endl<<"case 4: " <<data.win_goal; break;
-                case 5: data.win_goal= p[4]-win_height; std::cout<<std::endl<<"case 5: " <<data.win_goal; break;
+                case 1: data.win_goal= p[0]-win_height; std::cout<<std::endl<<"case 1: " <<data.win_goal; drawrectL(hdc,x_rectL,lev_decide(lParam,tab)-boxL_Heigth,buf,font_value); break;
+                case 2: data.win_goal= p[1]-win_height; std::cout<<std::endl<<"case 2: " <<data.win_goal; drawrectL(hdc,x_rectL,lev_decide(lParam,tab)-boxL_Heigth,buf,font_value); break;
+                case 3: data.win_goal= p[2]-win_height; std::cout<<std::endl<<"case 3: " <<data.win_goal; drawrectL(hdc,x_rectL,lev_decide(lParam,tab)-boxL_Heigth,buf,font_value); break;
+                case 4: data.win_goal= p[3]-win_height; std::cout<<std::endl<<"case 4: " <<data.win_goal; drawrectL(hdc,x_rectL,lev_decide(lParam,tab)-boxL_Heigth,buf,font_value); break;
+                case 5: data.win_goal= p[4]-win_height; std::cout<<std::endl<<"case 5: " <<data.win_goal; drawrectL(hdc,x_rectL,lev_decide(lParam,tab)-boxL_Heigth,buf,font_value); break;
                 default: data.win_goal= data.win_state; std::cout<<std::endl<<"default: " <<data.win_goal; break;
                 
 
