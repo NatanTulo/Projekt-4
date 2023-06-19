@@ -140,7 +140,7 @@ void drawrectL(HDC hdc,int x,int y,int number,int font_value)
     Gdiplus::Font        font(&fontFamily, font_value, Gdiplus::FontStyleRegular, UnitPixel);
     PointF      pointF(x,y);
     Gdiplus::Pen         pen(Gdiplus::Color(a,r,g,b));
-    
+    std::cout<<std::endl<<"drawrectL number: "<<number<<std::endl;
 
     std::wstring numberString = std::to_wstring(number);
     const wchar_t* text = numberString.c_str();
@@ -148,6 +148,7 @@ void drawrectL(HDC hdc,int x,int y,int number,int font_value)
     graphics.FillRectangle(&brush,x,y,boxL_width,boxL_Heigth);  
     graphics.DrawString(text, -1, &font, pointF, &brush2);
     graphics.DrawRectangle(&pen,x,y,boxL_width,boxL_Heigth);  
+    std::cout<<std::endl<<"drawrectL Executed "<<number<<std::endl;
    
 }
 Button_Data draw_panel(Button_Data dt,HDC hdc,int font_value,int x,int y,int level)
@@ -346,13 +347,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         buf = check_coords(lParam,data); // reakcja guzika, buf jest zmienną która daje ID wciśniętego guzika
          
          //debugging macierzy guzików
+         /*
         std::cout<<std::endl;
         for(int i = 0; i<BUTTON_COUNT;i++)
         {
          std::cout<<i<<" "<<data.buttons[i][0]<<" "<<data.buttons[i][1]<<" "<<data.buttons[i][2]<<" "<<data.buttons[i][3]<<" "<<data.buttons[i][4]<<std::endl;
         }
         std::cout<<buf<<" "<<LOWORD(lParam)<<" "<<HIWORD(lParam)<<std::endl;
-        
+        */
         if(buf>=0 && buf<6)
         {
             std::cout<<std::endl<<"buf: " <<buf;
@@ -406,6 +408,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         std::cout<<"if vectors empty: "<<data.v_down.empty()<<" "<<data.v_up.empty()<<std::endl;
 
         drawrectL(hdc,weightp_x,weightp_y,win_weigth,font_value);
+        
         std::cout<<"going_up "<<going_up<<std::endl;
 //przesuwanie windy
         if(buf == 7)
@@ -499,7 +502,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                 std::cout<<std::endl<<"p_count "<<data.p_count<< std::endl;
                 data.weight = data.p_count*P_WEIGHT;
                 std::cout<<std::endl<<"Weight "<<data.weight<< std::endl;
+                hdc = GetDC(hWnd);
                 drawrectL(hdc,weightp_x,weightp_y,data.weight,font_value);
+                ReleaseDC(hWnd, hdc);
+                
+                std::cout<<std::endl<<"Sleep "<<std::endl;
+                Sleep(1000);
 
                 if(data.q_up.empty()) going_up = false;
                 if(data.q_down.empty()) going_up = true;
@@ -563,7 +571,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
                     std::cout<<std::endl<<"p_count "<<data.p_count<< std::endl;
                     data.weight = data.p_count*P_WEIGHT;
                     std::cout<<std::endl<<"Weight "<<data.weight<< std::endl;
+                    hdc = GetDC(hWnd);
                     drawrectL(hdc,weightp_x,weightp_y,data.weight,font_value);
+                    ReleaseDC(hWnd, hdc);
              
                 std::cout<< std::endl<<" ------end------ pos: " << data.win_state<<std::endl;                  
             }
